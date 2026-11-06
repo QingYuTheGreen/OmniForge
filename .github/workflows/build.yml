@@ -1,0 +1,248 @@
+name: 全平台打包
+
+on:
+  # 打 tag 时自动触发
+  push:
+    tags:
+      - 'v*'
+  # 也支持手动触发
+  workflow_dispatch:
+
+# 取消同一分支的旧构建
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ═══════════════════════════════════════
+  # 1. Android: APK + AAB
+  # ═══════════════════════════════════════
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          cache: true
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 生成 APK
+        run: flutter build apk --release
+
+      - name: 生成 App Bundle
+        run: flutter build appbundle --release
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  # ═══════════════════════════════════════
+  # 2. Windows: EXE + MSIX
+  # ═══════════════════════════════════════
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          cache: true
+
+      - name: 启用 Windows 桌面支持
+        run: flutter config --enable-windows-desktop
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 构建 Windows EXE
+        run: flutter build windows --release
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: build/windows/x64/runner/Release/
+          retention-days: 30
+
+  # ═══════════════════════════════════════
+  # 3. macOS: DMG + APP
+  # ═══════════════════════════════════════
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          cache: true
+
+      - name: 启用 macOS 桌面支持
+        run: flutter config --enable-macos-desktop
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 构建 macOS APP
+        run: flutter build macos --release
+
+      - name: 打包 DMG
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "FileConverter" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon "FileConverter.app" 200 190 \
+            --app-drop-link 600 185 \
+            "build/macos/Build/Products/Release/FileConverter.dmg" \
+            "build/macos/Build/Products/Release/FileConverter.app"
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            build/macos/Build/Products/Release/FileConverter.app
+            build/macos/Build/Products/Release/FileConverter.dmg
+          retention-days: 30
+
+  # ═══════════════════════════════════════
+  # 4. Linux: DEB
+  # ═══════════════════════════════════════
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          cache: true
+
+      - name: 启用 Linux 桌面支持
+        run: flutter config --enable-linux-desktop
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 构建 Linux
+        run: flutter build linux --release
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: build/linux/x64/release/bundle/
+          retention-days: 30
+
+  # ═══════════════════════════════════════
+  # 5. iOS: IPA（需要 Apple 证书，暂用 Debug 签名）
+  # ═══════════════════════════════════════
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          cache: true
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 构建 iOS IPA
+        run: flutter build ios --release --no-codesign
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          path: build/ios/iphoneos/
+          retention-days: 30
+
+  # ═══════════════════════════════════════
+  # 6. 鸿蒙: HAP 裸包（CPF-Flutter 开源适配，未签名）
+  # ═══════════════════════════════════════
+  harmonyos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 OpenHarmony SDK 命令行工具
+        run: |
+          wget -q https://repo.huaweicloud.com/openharmony/developtools/commandline/4.0/commandline-tools-linux-x64-4.0.0.zip
+          unzip -q commandline-tools-linux-x64-4.0.0.zip -d /opt/ohos-sdk
+          echo "OHOS_SDK=/opt/ohos-sdk" >> $GITHUB_ENV
+          echo "PATH=/opt/ohos-sdk/bin:$PATH" >> $GITHUB_ENV
+
+      - name: 安装 CPF-Flutter 鸿蒙适配版
+        run: |
+          git clone --depth 1 -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          echo "PATH=/opt/flutter_ohos/bin:$PATH" >> $GITHUB_ENV
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 构建 HAP 裸包（未签名）
+        run: |
+          flutter build hap --release --no-sign
+          # 产物在 build/ohos/ 下
+          find build -name "*.hap" -type f
+
+      - name: 上传 HAP 裸包
+        uses: actions/upload-artifact@v4
+        with:
+          name: harmonyos
+          path: |
+            build/ohos/**/*.hap
+          retention-days: 30
+
+  # ═══════════════════════════════════════
+  # 7. 汇总：发 Release
+  # ═══════════════════════════════════════
+  release:
+    needs: [android, windows, macos, linux, ios, harmonyos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 下载所有产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.apk
+            artifacts/**/*.aab
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.deb
+            artifacts/**/*.ipa
+            artifacts/**/*.hap
