@@ -1,0 +1,702 @@
+formats:
+  # ── 1. 图像 ──
+  - id: jpg
+    name: "JPG 图片"
+    category: image
+    extensions: [".jpg", ".jpeg"]
+    accepts_from: []
+    engines: [image]
+
+  - id: png
+    name: "PNG 图片"
+    category: image
+    extensions: [".png"]
+    accepts_from: []
+    engines: [image]
+
+  - id: webp
+    name: "WebP 图片"
+    category: image
+    extensions: [".webp"]
+    accepts_from: []
+    engines: [image]
+
+  - id: heic
+    name: "HEIC 图片"
+    category: image
+    extensions: [".heic"]
+    accepts_from: []
+    engines: [image]
+
+  - id: svg
+    name: "SVG 矢量图"
+    category: image
+    extensions: [".svg"]
+    accepts_from: []
+    engines: [image]
+
+  - id: gif
+    name: "GIF 动图"
+    category: image
+    extensions: [".gif"]
+    accepts_from: [video, image]
+    engines: [ffmpeg]
+    params:
+      - key: "fps"
+        type: "slider"
+        label: "帧率"
+        default: "15"
+        min: 1
+        max: 60
+        step: 1
+      - key: "loop"
+        type: "switch"
+        label: "循环播放"
+        default: "true"
+
+  - id: bmp
+    name: "BMP 位图"
+    category: image
+    extensions: [".bmp"]
+    accepts_from: []
+    engines: [image]
+
+  - id: tiff
+    name: "TIFF 图片"
+    category: image
+    extensions: [".tiff", ".tif"]
+    accepts_from: []
+    engines: [image]
+
+  - id: ico
+    name: "ICO 图标"
+    category: image
+    extensions: [".ico"]
+    accepts_from: [image]
+    engines: [image]
+
+  - id: hdr
+    name: "HDR 高动态范围"
+    category: image
+    extensions: [".hdr"]
+    accepts_from: []
+    engines: [image]
+
+  - id: exr
+    name: "EXR 图像"
+    category: image
+    extensions: [".exr"]
+    accepts_from: []
+    engines: [image]
+
+  # ── 2. 音频 ──
+  - id: mp3
+    name: "MP3 音频"
+    category: audio
+    extensions: [".mp3"]
+    accepts_from: [video, audio]
+    engines: [ffmpeg]
+
+  - id: wav
+    name: "WAV 音频"
+    category: audio
+    extensions: [".wav"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: flac
+    name: "FLAC 无损音频"
+    category: audio
+    extensions: [".flac"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: aac
+    name: "AAC 音频"
+    category: audio
+    extensions: [".aac"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: m4a
+    name: "M4A 音频"
+    category: audio
+    extensions: [".m4a"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: ogg
+    name: "OGG 音频"
+    category: audio
+    extensions: [".ogg"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: midi
+    name: "MIDI 音频"
+    category: audio
+    extensions: [".mid", ".midi"]
+    accepts_from: [audio]
+    engines: [midi]
+    params:
+      - key: "vocal_mode"
+        type: "radio"
+        label: "人声处理"
+        options:
+          - { value: "remove", label: "去人声" }
+          - { value: "keep", label: "带人声" }
+
+  - id: ncm
+    name: "NCM 网易云"
+    category: audio
+    extensions: [".ncm"]
+    accepts_from: []
+    engines: [netease]
+
+  - id: kgm
+    name: "KGM 酷狗"
+    category: audio
+    extensions: [".kgm"]
+    accepts_from: []
+    engines: [kugou]
+
+  - id: qmc
+    name: "QMC QQ音乐"
+    category: audio
+    extensions: [".qmc"]
+    accepts_from: []
+    engines: [qqmusic]
+
+  # ── 3. 视频 ──
+  - id: mp4
+    name: "MP4 视频"
+    category: video
+    extensions: [".mp4"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: mkv
+    name: "MKV 视频"
+    category: video
+    extensions: [".mkv"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: mov
+    name: "MOV 视频"
+    category: video
+    extensions: [".mov"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: avi
+    name: "AVI 视频"
+    category: video
+    extensions: [".avi"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: webm
+    name: "WebM 视频"
+    category: video
+    extensions: [".webm"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  - id: flv
+    name: "FLV 视频"
+    category: video
+    extensions: [".flv"]
+    accepts_from: []
+    engines: [ffmpeg]
+
+  # ── 4. 电子书 ──
+  - id: epub
+    name: "EPUB 电子书"
+    category: ebook
+    extensions: [".epub"]
+    accepts_from: []
+    engines: [ebook]
+
+  - id: mobi
+    name: "MOBI 电子书"
+    category: ebook
+    extensions: [".mobi"]
+    accepts_from: []
+    engines: [ebook]
+
+  - id: azw3
+    name: "AZW3 电子书"
+    category: ebook
+    extensions: [".azw3"]
+    accepts_from: []
+    engines: [ebook]
+
+  - id: pdf
+    name: "PDF 文档"
+    category: ebook
+    extensions: [".pdf"]
+    accepts_from: []
+    engines: [pdf]
+
+  - id: txt
+    name: "TXT 文本"
+    category: ebook
+    extensions: [".txt"]
+    accepts_from: []
+    engines: [text]
+
+  # ── 5. 文档 ──
+  - id: docx
+    name: "Word 文档"
+    category: document
+    extensions: [".docx"]
+    accepts_from: []
+    engines: [office]
+
+  - id: md
+    name: "Markdown 文档"
+    category: document
+    extensions: [".md"]
+    accepts_from: []
+    engines: [text]
+
+  - id: html
+    name: "HTML 网页"
+    category: document
+    extensions: [".html", ".htm"]
+    accepts_from: []
+    engines: [web]
+
+  - id: rtf
+    name: "RTF 富文本"
+    category: document
+    extensions: [".rtf"]
+    accepts_from: []
+    engines: [office]
+
+  # ── 6. 幻灯片 ──
+  - id: pptx
+    name: "PowerPoint 幻灯片"
+    category: slides
+    extensions: [".pptx"]
+    accepts_from: []
+    engines: [office]
+
+  - id: odp
+    name: "ODP 幻灯片"
+    category: slides
+    extensions: [".odp"]
+    accepts_from: []
+    engines: [office]
+
+  # ── 7. 表格 ──
+  - id: xlsx
+    name: "Excel 表格"
+    category: spreadsheet
+    extensions: [".xlsx"]
+    accepts_from: []
+    engines: [office]
+
+  - id: csv
+    name: "CSV 表格"
+    category: spreadsheet
+    extensions: [".csv"]
+    accepts_from: []
+    engines: [table]
+
+  - id: json
+    name: "JSON 数据"
+    category: spreadsheet
+    extensions: [".json"]
+    accepts_from: []
+    engines: [table]
+
+  - id: xml
+    name: "XML 数据"
+    category: spreadsheet
+    extensions: [".xml"]
+    accepts_from: []
+    engines: [table]
+
+  # ── 8. 字体 ──
+  - id: ttf
+    name: "TTF 字体"
+    category: font
+    extensions: [".ttf"]
+    accepts_from: []
+    engines: [font]
+
+  - id: otf
+    name: "OTF 字体"
+    category: font
+    extensions: [".otf"]
+    accepts_from: []
+    engines: [font]
+
+  - id: woff2
+    name: "WOFF2 网页字体"
+    category: font
+    extensions: [".woff2"]
+    accepts_from: []
+    engines: [font]
+
+  - id: ufo
+    name: "UFO 字体工程"
+    category: font
+    extensions: [".ufo"]
+    accepts_from: []
+    engines: [font]
+
+  # ── 9. 调色板 ──
+  - id: ase
+    name: "ASE 调色板"
+    category: palette
+    extensions: [".ase"]
+    accepts_from: []
+    engines: [color]
+
+  - id: aco
+    name: "ACO 调色板"
+    category: palette
+    extensions: [".aco"]
+    accepts_from: []
+    engines: [color]
+
+  - id: gpl
+    name: "GPL 调色板"
+    category: palette
+    extensions: [".gpl"]
+    accepts_from: []
+    engines: [color]
+
+  # ── 10. 3D 模型 ──
+  - id: obj
+    name: "OBJ 3D 模型"
+    category: model3d
+    extensions: [".obj"]
+    accepts_from: []
+    engines: [model3d]
+
+  - id: fbx
+    name: "FBX 3D 模型"
+    category: model3d
+    extensions: [".fbx"]
+    accepts_from: []
+    engines: [model3d]
+
+  - id: stl
+    name: "STL 3D 打印模型"
+    category: model3d
+    extensions: [".stl"]
+    accepts_from: []
+    engines: [model3d]
+
+  - id: gltf
+    name: "glTF 3D 模型"
+    category: model3d
+    extensions: [".gltf"]
+    accepts_from: []
+    engines: [model3d]
+
+  - id: glb
+    name: "GLB 3D 模型"
+    category: model3d
+    extensions: [".glb"]
+    accepts_from: []
+    engines: [model3d]
+
+  - id: geo_json
+    name: "MC 基岩版 3D 模型"
+    category: model3d
+    extensions: [".geo.json"]
+    accepts_from: [model3d]
+    engines: [minecraft]
+
+  # ── 11. 纹理 ──
+  - id: dds
+    name: "DDS 纹理"
+    category: texture
+    extensions: [".dds"]
+    accepts_from: [image]
+    engines: [texture]
+
+  - id: astc
+    name: "ASTC 纹理"
+    category: texture
+    extensions: [".astc"]
+    accepts_from: [image]
+    engines: [texture]
+
+  - id: ktx
+    name: "KTX 纹理"
+    category: texture
+    extensions: [".ktx"]
+    accepts_from: [image]
+    engines: [texture]
+
+  - id: xnb
+    name: "XNB 纹理"
+    category: texture
+    extensions: [".xnb"]
+    accepts_from: [image]
+    engines: [texture]
+
+  - id: tga
+    name: "TGA 纹理"
+    category: texture
+    extensions: [".tga"]
+    accepts_from: [image]
+    engines: [texture]
+
+  # ── 12. 网格 ──
+  - id: ply
+    name: "PLY 网格"
+    category: mesh
+    extensions: [".ply"]
+    accepts_from: []
+    engines: [mesh]
+
+  - id: off
+    name: "OFF 网格"
+    category: mesh
+    extensions: [".off"]
+    accepts_from: []
+    engines: [mesh]
+
+  # ── 13. 哈希计算 ──
+  - id: md5
+    name: "MD5 哈希"
+    category: hash
+    extensions: [".md5"]
+    accepts_from: ["*"]
+    engines: [hash]
+
+  - id: sha
+    name: "SHA 哈希"
+    category: hash
+    extensions: [".sha", ".sha256", ".sha512"]
+    accepts_from: ["*"]
+    engines: [hash]
+
+  - id: crc
+    name: "CRC 校验"
+    category: hash
+    extensions: [".crc"]
+    accepts_from: ["*"]
+    engines: [hash]
+
+  - id: base64
+    name: "Base64 编码"
+    category: hash
+    extensions: [".b64", ".base64"]
+    accepts_from: ["*"]
+    engines: [hash]
+
+  # ── 14. 绣花 ──
+  - id: pes
+    name: "PES 绣花"
+    category: embroidery
+    extensions: [".pes"]
+    accepts_from: []
+    engines: [embroidery]
+
+  - id: dst
+    name: "DST 绣花"
+    category: embroidery
+    extensions: [".dst"]
+    accepts_from: []
+    engines: [embroidery]
+
+  - id: jef
+    name: "JEF 绣花"
+    category: embroidery
+    extensions: [".jef"]
+    accepts_from: []
+    engines: [embroidery]
+
+  # ── 15. GPS ──
+  - id: gpx
+    name: "GPX 轨迹"
+    category: gps
+    extensions: [".gpx"]
+    accepts_from: []
+    engines: [gps]
+
+  - id: kml
+    name: "KML 地图"
+    category: gps
+    extensions: [".kml"]
+    accepts_from: []
+    engines: [gps]
+
+  - id: tcx
+    name: "TCX 运动数据"
+    category: gps
+    extensions: [".tcx"]
+    accepts_from: []
+    engines: [gps]
+
+  - id: geojson
+    name: "GeoJSON 地理数据"
+    category: gps
+    extensions: [".geojson"]
+    accepts_from: []
+    engines: [gps]
+
+  # ── 16. 字幕 ──
+  - id: srt
+    name: "SRT 字幕"
+    category: subtitle
+    extensions: [".srt"]
+    accepts_from: []
+    engines: [subtitle]
+
+  - id: ass
+    name: "ASS 字幕"
+    category: subtitle
+    extensions: [".ass"]
+    accepts_from: []
+    engines: [subtitle]
+
+  - id: vtt
+    name: "VTT 字幕"
+    category: subtitle
+    extensions: [".vtt"]
+    accepts_from: []
+    engines: [subtitle]
+
+  - id: lrc
+    name: "LRC 歌词"
+    category: subtitle
+    extensions: [".lrc"]
+    accepts_from: []
+    engines: [subtitle]
+
+  # ── 17. 播放列表 ──
+  - id: m3u
+    name: "M3U 播放列表"
+    category: playlist
+    extensions: [".m3u"]
+    accepts_from: []
+    engines: [playlist]
+
+  - id: m3u8
+    name: "M3U8 播放列表"
+    category: playlist
+    extensions: [".m3u8"]
+    accepts_from: []
+    engines: [playlist]
+
+  - id: cue
+    name: "CUE 曲目表"
+    category: playlist
+    extensions: [".cue"]
+    accepts_from: []
+    engines: [playlist]
+
+  # ── 18. 压缩包 ──
+  - id: zip
+    name: "ZIP 压缩包"
+    category: archive
+    extensions: [".zip"]
+    accepts_from: ["*"]
+    engines: [archive]
+
+  - id: rar
+    name: "RAR 压缩包"
+    category: archive
+    extensions: [".rar"]
+    accepts_from: []
+    engines: [archive]
+
+  - id: seven_z
+    name: "7Z 压缩包"
+    category: archive
+    extensions: [".7z"]
+    accepts_from: []
+    engines: [archive]
+
+  - id: tar_gz
+    name: "TAR.GZ 压缩包"
+    category: archive
+    extensions: [".tar.gz", ".tgz"]
+    accepts_from: []
+    engines: [archive]
+
+  # ── 19. 我的世界专区 ──
+  - id: mcworld
+    name: "MC 基岩版世界存档"
+    category: minecraft
+    extensions: [".mcworld"]
+    accepts_from: [mcworld_java]
+    engines: [minecraft]
+    params:
+      - key: "source_version"
+        type: "dropdown"
+        label: "源版本"
+        options: ["26.3", "26.2", "26.1.2", "1.21.4", "1.20.1"]
+      - key: "target_version"
+        type: "dropdown"
+        label: "目标版本"
+        options: ["26.3", "26.2", "26.1.2", "1.21.4", "1.20.1"]
+
+  - id: mcpack
+    name: "MC 基岩版资源包"
+    category: minecraft
+    extensions: [".mcpack"]
+    accepts_from: [mcpack_java]
+    engines: [minecraft]
+
+  - id: mcworld_java
+    name: "MC Java 版世界存档"
+    category: minecraft
+    extensions: [".zip"]
+    accepts_from: [mcworld]
+    engines: [minecraft]
+
+  - id: mcpack_java
+    name: "MC Java 版资源包"
+    category: minecraft
+    extensions: [".zip"]
+    accepts_from: [mcpack]
+    engines: [minecraft]
+
+flows:
+  - name: "video_to_gif"
+    source: [mp4, mkv, mov, avi, webm]
+    target: [gif]
+    engine: ffmpeg
+    params:
+      - key: "fps"
+        type: "slider"
+        label: "帧率"
+        default: "15"
+        min: 1
+        max: 60
+        step: 1
+
+  - name: "video_to_audio"
+    source: [mp4, mkv, mov, avi, webm]
+    target: [mp3, wav, flac, aac, m4a, ogg]
+    engine: ffmpeg
+
+  - name: "image_to_image"
+    source: [jpg, png, webp, heic, bmp, tiff, ico, hdr, exr]
+    target: [jpg, png, webp, bmp, tiff, ico]
+    engine: image
+
+  - name: "texture_to_image"
+    source: [dds, astc, ktx, xnb, tga]
+    target: [png, jpg]
+    engine: texture
+
+  - name: "ncm_to_mp3"
+    source: [ncm]
+    target: [mp3]
+    engine: netease
+
+  - name: "mcworld_convert"
+    source: [mcworld, mcworld_java]
+    target: [mcworld, mcworld_java]
+    engine: minecraft
