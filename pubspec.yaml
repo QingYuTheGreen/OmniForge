@@ -1,0 +1,30 @@
+name: omniforge
+description: 全能跨平台文件转换器 - 100% 离线运行
+version: 1.0.0+1
+
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  yaml: ^3.1.2
+  path_provider: ^2.1.2
+  file_picker: ^8.0.0
+  share_plus: ^8.0.0
+  open_filex: ^4.4.0
+  window_manager: ^0.3.8
+  flutter_riverpod: ^2.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/formats.yaml
