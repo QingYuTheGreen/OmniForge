@@ -15,7 +15,7 @@ jobs:
         run: |
           # 注意：不能用 --depth 1 浅克隆，否则 git describe 拿不到版本号，
           # Flutter 会识别成 0.0.0-unknown，导致 pub get 依赖解析失败
-          git clone -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          git clone https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
           echo "/opt/flutter_ohos/bin" >> $GITHUB_PATH
           chmod +x /opt/flutter_ohos/bin/flutter
           chmod +x /opt/flutter_ohos/bin/dart
