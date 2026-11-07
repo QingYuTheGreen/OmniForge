@@ -119,12 +119,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 安装 Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: true
+      - name: 安装 Flutter（官方无 Windows arm64 发行包，用源码方式）
+        shell: bash
+        run: |
+          git clone --depth 1 --branch 3.47.9 https://github.com/flutter/flutter.git C:/flutter
+          echo "C:/flutter/bin" >> $GITHUB_PATH
 
       - name: 启用 Windows 桌面支持
         run: flutter config --enable-windows-desktop
@@ -253,12 +252,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
 
-      - name: 安装 Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: true
+      - name: 安装 Flutter（官方无 linux arm64 发行包，用源码方式）
+        run: |
+          git clone --depth 1 --branch 3.47.9 https://github.com/flutter/flutter.git /opt/flutter
+          echo "/opt/flutter/bin" >> $GITHUB_PATH
 
       - name: 启用 Linux 桌面支持
         run: flutter config --enable-linux-desktop
@@ -301,11 +298,6 @@ jobs:
 
       - name: 安装依赖
         run: flutter pub get
-
-      - name: 安装 CocoaPods 依赖
-        run: |
-          cd ios
-          pod install
 
       - name: 构建 iOS（无签名 .app）
         run: flutter build ios --release --no-codesign
@@ -352,9 +344,9 @@ jobs:
         run: |
           set -e
           mkdir -p /tmp/cli-tools && cd /tmp/cli-tools
-          BASE_URL="https://raw.githubusercontent.com/xiaobingtech/commandline-tools-linux-x64-6.1.0.830/refs/heads/main"
-          for i in $(seq -f "%03g" 1 20); do
-            FILENAME="commandline-tools-linux-x64-6.1.0.830.7z.$i"
+          BASE_URL="https://raw.githubusercontent.com/xiaobingtech/commandline-tools-linux-x64-26.0.0.821/refs/heads/main"
+          for i in $(seq -f "%03g" 1 21); do
+            FILENAME="commandline-tools-linux-x64-26.0.0.821.7z.$i"
             for attempt in 1 2 3; do
               if curl -fL --retry 3 --retry-delay 5 --max-time 600 -o "$FILENAME" "$BASE_URL/$FILENAME"; then
                 break
@@ -397,7 +389,10 @@ jobs:
         run: |
           set -e
           git clone --depth 1 --branch oh-3.44.9-release \
-            https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+            https://gitcode.com/openharmony-tpc/flutter_flutter.git /opt/flutter_ohos
+          # 官方 release 分支不带 tag，flutter 会识别成 0.0.0-unknown 导致 pub 解析失败
+          git -C /opt/flutter_ohos tag 3.44.9
+          rm -f /opt/flutter_ohos/bin/cache/flutter.version.json
           chmod +x /opt/flutter_ohos/bin/flutter /opt/flutter_ohos/bin/dart
           echo "/opt/flutter_ohos/bin" >> $GITHUB_PATH
 
@@ -406,20 +401,22 @@ jobs:
           which flutter ohpm hvigorw || true
           flutter --version
           ohpm --version || true
-          ls "$DEVECO_SDK_HOME"
+          grep -E "apiVersion|displayName" "$DEVECO_SDK_HOME/default/sdk-pkg.json"
 
       - name: 安装依赖
         run: flutter pub get
 
       - name: 编译 HAP
-        run: flutter build hap --release
+        run: |
+          cd ohos && ohpm install && cd ..
+          flutter build app --release
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: ohos
           path: |
-            ${{ env.WORK_DIR }}/ohos/entry/build/default/outputs/**/*.hap
+            ${{ env.WORK_DIR }}/ohos/entry/build/default/outputs/default/*.hap
           retention-days: 30
           if-no-files-found: error
 
