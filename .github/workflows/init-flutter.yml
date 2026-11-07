@@ -1,0 +1,32 @@
+name: 一键生成 Flutter 全平台骨架（包含鸿蒙）
+
+on:
+  workflow_dispatch:
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. 克隆 CPF-Flutter 鸿蒙适配版 SDK
+      - name: 安装 CPF-Flutter 鸿蒙 SDK
+        run: |
+          git clone --depth 1 -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          echo "PATH=/opt/flutter_ohos/bin:$PATH" >> $GITHUB_ENV
+
+      # 2. 使用鸿蒙版 SDK 生成全平台骨架（含 ohos 目录）
+      - name: 生成全平台骨架
+        run: |
+          flutter create . --project-name omniforge --platforms=android,ios,web,windows,macos,linux,ohos
+
+      # 3. 自动提交回仓库
+      - name: 提交更改
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Auto-generate all Flutter platform folders (including HarmonyOS)"
+          git push
