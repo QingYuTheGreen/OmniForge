@@ -416,7 +416,7 @@ jobs:
       - name: 编译 HAP
         run: |
           cd ohos && ohpm install && cd ..
-          flutter build app --release
+          flutter build app --release --no-codesign
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
