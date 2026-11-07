@@ -25,7 +25,8 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.file.omniforge.app"
-    compileSdk = flutter.compileSdkVersion
+    // receive_sharing_intent 要求 compileSdk >= 37，Flutter 默认值是 36，显式抬高
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

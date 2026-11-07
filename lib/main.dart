@@ -22,7 +22,7 @@ class OmniForgeApp extends ConsumerStatefulWidget {
 class _OmniForgeAppState extends ConsumerState<OmniForgeApp> {
   StreamSubscription? _intentSub;
 
-  /// 设备是否支持动态取色（Android 12 / API 31 及以上）
+  /// 设备是否支持动态取色（Android 12 / API 31 及以上），仅用于设置页提示
   bool _dynamicSupported = false;
 
   @override
@@ -44,7 +44,7 @@ class _OmniForgeAppState extends ConsumerState<OmniForgeApp> {
     }
   }
 
-  /// 接收其他应用分享/打开过来的文件
+  /// 接收其他应用分享/打开过来的文件：只登记路径，由 HomePage 打开转换配置页
   void _initIncomingFiles() {
     _loadInitialFiles();
     try {
@@ -52,7 +52,7 @@ class _OmniForgeAppState extends ConsumerState<OmniForgeApp> {
       _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen(
         (files) {
           for (final f in files) {
-            ref.read(homeProvider.notifier).addExternalFile(f.path);
+            ref.read(incomingFileProvider.notifier).state = f.path;
           }
         },
         onError: (_) {},
@@ -68,7 +68,7 @@ class _OmniForgeAppState extends ConsumerState<OmniForgeApp> {
       final files = await ReceiveSharingIntent.instance.getInitialMedia();
       if (files.isEmpty || !mounted) return;
       for (final f in files) {
-        ref.read(homeProvider.notifier).addExternalFile(f.path);
+        ref.read(incomingFileProvider.notifier).state = f.path;
       }
       ReceiveSharingIntent.instance.reset();
     } catch (_) {
@@ -88,9 +88,14 @@ class _OmniForgeAppState extends ConsumerState<OmniForgeApp> {
 
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
-        // 三重条件：用户开启开关 + 设备是 Android 12+ + 系统真的给了壁纸色
-        final useDynamic =
-            settings.dynamicColor && _dynamicSupported && lightDynamic != null;
+        // 回写系统是否真的给了壁纸配色，供设置页提示
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(wallpaperColorAvailableProvider.notifier).state =
+              lightDynamic != null;
+        });
+
+        // 是否真正拿到壁纸配色，以插件返回值为准（插件内部已判断系统版本）
+        final useDynamic = settings.dynamicColor && lightDynamic != null;
 
         final ColorScheme lightScheme;
         final ColorScheme darkScheme;

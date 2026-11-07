@@ -12,20 +12,41 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.6
   yaml: ^3.1.2
-  path_provider: ^2.1.2
-  file_picker: ^8.0.0
-  share_plus: ^8.0.0
-  open_filex: ^4.4.0
+  # 鸿蒙走 CPF-Flutter 官方适配分支（带 ohos 原生实现，其他平台仍走官方 fork 内实现）
+  # path_provider: 官方 federated 插件，CPF monorepo 内
+  path_provider:
+    git:
+      url: https://gitcode.com/CPF-Flutter/flutter_packages.git
+      path: packages/path_provider/path_provider
+      ref: br_path_provider-v2.1.5_ohos
+  # file_picker: 社区适配版
+  file_picker:
+    git:
+      url: https://gitcode.com/CPF-Flutter/fluttertpc_file_picker.git
+      ref: br_v8.0.7_ohos
+  # open_filex: 社区适配版
+  open_filex:
+    git:
+      url: https://gitcode.com/CPF-Flutter/fluttertpc_open_filex.git
+      ref: br_v4.5.0_ohos
+  # share_plus: 社区适配版（跨 monorepo，API 已升级到 v10.x 的 SharePlus.instance.share）
+  share_plus:
+    git:
+      url: https://gitcode.com/CPF-Flutter/flutter_plus_plugins.git
+      path: packages/share_plus/share_plus
+      ref: br_share_plus-v10.1.1_ohos
   window_manager: ^0.3.8
   flutter_riverpod: ^2.5.1
   # 动态取色（Material You，仅 Android 12+ 生效，其他平台自动返回 null）
   dynamic_color: ^1.7.0
-  # 读取安卓版本（SDK_INT），判断是否支持动态取色
+  # 读取安卓版本（SDK_INT），判断是否支持动态取色（仅 Android 用）
   device_info_plus: ^10.1.0
-  # 公共目录写入权限申请（MANAGE_EXTERNAL_STORAGE）
+  # 公共目录写入权限申请（仅 Android 用）
   permission_handler: ^11.3.0
-  # 接收其他应用分享/打开的文件（Android + iOS）
+  # 接收其他应用分享/打开的文件（Android + iOS；ohos 由自建通道接管）
   receive_sharing_intent: ^1.8.1
+  # 运行时切换桌面图标（Android activity-alias + iOS 备选图标）
+  dynamic_app_icon_changer: ^0.0.3
 
 dev_dependencies:
   flutter_test:
@@ -36,3 +57,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/formats.yaml
+    - assets/icons/

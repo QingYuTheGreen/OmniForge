@@ -6,12 +6,9 @@ import 'package:path_provider/path_provider.dart';
 /// Windows:   D:\OmniForge\（无 D 盘则 用户目录\OmniForge）
 /// macOS:     ~/OmniForge/
 /// Linux:     ~/OmniForge/
-/// iOS:       沙盒 Documents/OmniForge/（系统不允许写公共目录）
-/// OHOS:      应用外部存储/OmniForge/（系统不允许写公共目录）
+/// iOS / OHOS: 沙盒目录/OmniForge/（系统不允许写公共目录）
 class OutputPaths {
   static Directory? _cache;
-
-  static bool get _isOHOS => Platform.operatingSystem == 'ohos';
 
   static Future<Directory> get outputDir async {
     if (_cache != null && await _cache!.exists()) return _cache!;
@@ -33,15 +30,8 @@ class OutputPaths {
     } else if (Platform.isIOS) {
       final docs = await getApplicationDocumentsDirectory();
       dir = Directory('${docs.path}/OmniForge');
-    } else if (_isOHOS) {
-      final ext = await getExternalStorageDirectory();
-      if (ext != null) {
-        dir = Directory('${ext.path}/OmniForge');
-      } else {
-        final docs = await getApplicationDocumentsDirectory();
-        dir = Directory('${docs.path}/OmniForge');
-      }
     } else {
+      // OHOS 及其他：path_provider 鸿蒙适配版，落到应用沙箱临时目录
       final temp = await getTemporaryDirectory();
       dir = Directory('${temp.path}/OmniForge');
     }
@@ -64,9 +54,7 @@ class OutputPaths {
     if (Platform.isWindows) return r'D:\OmniForge\ （无 D 盘时用 用户目录\OmniForge）';
     if (Platform.isMacOS) return '~/OmniForge/';
     if (Platform.isLinux) return '~/OmniForge/';
-    if (Platform.isIOS) return 'App 文档目录/OmniForge/';
-    if (_isOHOS) return 'App 外部存储/OmniForge/';
-    return '临时目录/OmniForge/';
+    return '应用沙箱目录/OmniForge/';
   }
 
   /// 生成输出路径：原名_output.扩展名

@@ -25,6 +25,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     final notifier = ref.read(homeProvider.notifier);
     final settings = ref.watch(settingsProvider);
 
+    // 其他应用分享/打开进来的文件 → 打开转换配置页（不直接转换）
+    ref.listen<String?>(incomingFileProvider, (prev, next) => _handleIncoming(next));
+    final pending = ref.read(incomingFileProvider);
+    if (pending != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handleIncoming(pending));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('OmniForge'),
@@ -67,6 +74,17 @@ class _HomePageState extends ConsumerState<HomePage> {
           NavigationDestination(icon: Icon(Icons.folder_outlined), label: '文件'),
         ],
       ),
+    );
+  }
+
+  /// 处理外来文件：幂等，先消费（置 null）再打开配置页，防止重复跳转
+  void _handleIncoming(String? path) {
+    if (path == null || !mounted) return;
+    if (ref.read(incomingFileProvider) != path) return;
+    ref.read(incomingFileProvider.notifier).state = null;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ConfigPage(initialFilePath: path)),
     );
   }
 
@@ -189,6 +207,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: const Text('取消'),
                   ),
                 ]),
+                const SizedBox(height: 10),
+                if (file.detectedType != null || file.detectedFormat != null)
+                  _detectChip(cs, file),
                 const SizedBox(height: 12),
                 LinearProgressIndicator(value: file.progress),
                 const SizedBox(height: 6),
@@ -223,6 +244,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                 ]),
+                const SizedBox(height: 8),
+                if (file.detectedType != null || file.detectedFormat != null)
+                  _detectChip(cs, file),
                 const SizedBox(height: 8),
                 Text(
                   file.outputPath ?? '',
@@ -291,6 +315,35 @@ class _HomePageState extends ConsumerState<HomePage> {
     return const SizedBox.shrink();
   }
 
+  /// 自动识别结果的小标签：类型 + 格式
+  Widget _detectChip(ColorScheme cs, FileItem file) {
+    final text = [
+      if (file.detectedType != null) file.detectedType,
+      if (file.detectedFormat != null) '.${file.detectedFormat}',
+    ].join(' ');
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: cs.secondaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome, size: 13, color: cs.onSecondaryContainer),
+            const SizedBox(width: 5),
+            Text(text,
+                style: TextStyle(
+                    fontSize: 12, color: cs.onSecondaryContainer)),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── 分享 ──
   Future<void> _share(FileItem file) async {
     final path = file.outputPath;
@@ -299,7 +352,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
     try {
-      await Share.shareXFiles([XFile(path)], text: file.name);
+      // share_plus v10.x 新 API（适配版自带 ohos 实现，全平台统一）
+      await SharePlus.instance.share(
+        ShareParams(files: [SharedFile(path: path)], text: file.name),
+      );
     } catch (e) {
       _toast('分享失败：$e');
     }

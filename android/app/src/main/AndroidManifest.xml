@@ -18,11 +18,18 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">
+
+        <!--
+          MainActivity：不放 LAUNCHER intent-filter（交给下面的 activity-alias），
+          这样切换图标时它永远不会被禁用，flutter run / adb 启动不会报
+          “Activity class does not exist”。
+          launchMode 必须是 singleTask，且不能写 taskAffinity=""，
+          否则点新图标会开第二个应用实例。
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -31,10 +38,6 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
 
             <!-- 从其他应用「打开」文件进来 -->
             <intent-filter>
@@ -59,6 +62,49 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+
+        <!-- ═══ 默认图标（图标3 循环箭头），enabled=true ═══ -->
+        <activity-alias
+            android:name=".DefaultIcon"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="OmniForge"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- ═══ 备选图标1（铁砧），默认关闭 ═══ -->
+        <activity-alias
+            android:name=".IconAnvil"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_anvil"
+            android:label="OmniForge"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- ═══ 备选图标2（火焰），默认关闭 ═══ -->
+        <activity-alias
+            android:name=".IconFlame"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_flame"
+            android:label="OmniForge"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

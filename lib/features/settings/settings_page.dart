@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:dynamic_app_icon_changer/dynamic_app_icon_changer.dart';
 import '../../utils/output_paths.dart';
 import 'settings_provider.dart';
 
@@ -21,10 +22,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   String _deviceLabel = '';
   bool _hasStorageAccess = true;
 
+  /// 当前平台是否支持运行时切换桌面图标
+  bool get _iconSwitchSupported =>
+      Platform.isAndroid || Platform.isIOS;
+
   @override
   void initState() {
     super.initState();
     _loadPlatform();
+    _syncCurrentIcon();
   }
 
   Future<void> _loadPlatform() async {
@@ -48,6 +54,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
+  /// 启动时读取系统当前生效的图标，回写到设置状态
+  Future<void> _syncCurrentIcon() async {
+    if (!_iconSwitchSupported) return;
+    try {
+      final name = await DynamicAppIconChanger.alternateIconName;
+      final match = AppIcon.values.firstWhere(
+        (i) => i.aliasName == name,
+        orElse: () => AppIcon.defaultIcon,
+      );
+      ref.read(settingsProvider.notifier).setAppIcon(match);
+    } catch (_) {
+      // 不支持就保持默认
+    }
+  }
+
   bool get _dynamicSupported => Platform.isAndroid && _sdkInt >= 31;
 
   Future<void> _requestStorage() async {
@@ -58,6 +79,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('未获得存储权限，输出文件会存到应用私有目录')),
       );
+    }
+  }
+
+  /// 选择桌面图标：先存偏好，再在支持的平台调用原生切换
+  Future<void> _pickIcon(AppIcon icon) async {
+    final notifier = ref.read(settingsProvider.notifier);
+    notifier.setAppIcon(icon);
+
+    if (!_iconSwitchSupported) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('当前平台不支持切换桌面图标，偏好已保存')),
+      );
+      return;
+    }
+
+    try {
+      await DynamicAppIconChanger.setAlternateIconName(icon.aliasName);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('图标切换失败：$e')),
+        );
+      }
     }
   }
 
@@ -146,14 +190,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 padding: EdgeInsets.symmetric(vertical: 8),
                 child: LinearProgressIndicator(),
               )
-            else if (_dynamicSupported)
+            else if (_dynamicSupported) ...[
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('动态色彩'),
                 subtitle: Text('从系统壁纸自动取色（$_deviceLabel）'),
                 value: state.dynamicColor,
                 onChanged: notifier.setDynamicColor,
-              )
+              ),
+              if (state.dynamicColor &&
+                  !ref.watch(wallpaperColorAvailableProvider))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    '系统当前没有提供壁纸配色。请在系统「设置 → 壁纸与个性化」里开启壁纸取色/主题色后重启本应用；部分 MIUI 版本不支持第三方应用取色。',
+                    style: TextStyle(fontSize: 12, color: cs.error),
+                  ),
+                ),
+            ]
             else
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -182,7 +236,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ]),
           const SizedBox(height: 20),
 
-          // ── 桌面图标 ──
+          // ── 桌面图标（3 个真实预览） ──
           _card(cs, [
             Row(
               children: [
@@ -198,17 +252,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const Divider(height: 24),
             Row(
               children: [
-                _icon(cs, '经典图标', state.appIcon == AppIcon.classic,
-                    () => notifier.setAppIcon(AppIcon.classic)),
-                const SizedBox(width: 20),
-                _icon(cs, '新图标', state.appIcon == AppIcon.newOne,
-                    () => notifier.setAppIcon(AppIcon.newOne)),
+                for (final icon in AppIcon.values) ...[
+                  Expanded(
+                    child: _iconPreview(
+                      cs,
+                      icon: icon,
+                      asset: _iconAsset(icon),
+                      selected: state.appIcon == icon,
+                      onTap: () => _pickIcon(icon),
+                    ),
+                  ),
+                  if (icon != AppIcon.values.last) const SizedBox(width: 12),
+                ],
               ],
             ),
             const SizedBox(height: 12),
-            if (Platform.isAndroid)
-              Text('Android 12+ 立即生效；部分设备需回到桌面或重启启动器后查看。',
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+            Text(
+              _iconSwitchSupported
+                  ? '点击即切换；部分启动器需几秒或重启桌面后刷新。'
+                  : '当前平台不支持运行时切换，桌面仍显示默认图标。',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
           ]),
           const SizedBox(height: 20),
 
@@ -249,6 +313,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ],
       ),
     );
+  }
+
+  String _iconAsset(AppIcon icon) {
+    switch (icon) {
+      case AppIcon.defaultIcon:
+        return 'assets/icons/icon_default.png';
+      case AppIcon.anvil:
+        return 'assets/icons/icon_anvil.png';
+      case AppIcon.flame:
+        return 'assets/icons/icon_flame.png';
+    }
   }
 
   Widget _title(String text) => Padding(
@@ -324,26 +399,34 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  Widget _icon(ColorScheme cs, String label, bool selected, VoidCallback onTap) {
+  Widget _iconPreview(
+    ColorScheme cs, {
+    required AppIcon icon,
+    required String asset,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           Container(
-            width: 68,
-            height: 68,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: selected ? cs.primary : cs.outlineVariant,
                 width: selected ? 3 : 1,
               ),
-              color: cs.surface,
             ),
-            child: Icon(Icons.extension_outlined, size: 30, color: cs.primary),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset(asset, fit: BoxFit.cover),
+            ),
           ),
           const SizedBox(height: 6),
-          Text(label,
+          Text(icon.label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.bold : FontWeight.normal,

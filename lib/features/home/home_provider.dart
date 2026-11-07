@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/output_paths.dart';
+import '../../utils/file_type_detector.dart';
 
 // ── 文件状态 ──
 enum FileStatus { processing, completed, failed }
@@ -14,6 +15,12 @@ class FileItem {
   final String? outputPath;
   final String? error;
 
+  /// 自动识别出的类型中文名（如「图像」），未识别为 null
+  final String? detectedType;
+
+  /// 自动识别出的格式扩展名（如 png），未识别为 null
+  final String? detectedFormat;
+
   const FileItem({
     required this.name,
     required this.path,
@@ -21,6 +28,8 @@ class FileItem {
     this.progress = 0,
     this.outputPath,
     this.error,
+    this.detectedType,
+    this.detectedFormat,
   });
 
   FileItem copyWith({
@@ -28,6 +37,8 @@ class FileItem {
     double? progress,
     String? outputPath,
     String? error,
+    String? detectedType,
+    String? detectedFormat,
   }) {
     return FileItem(
       name: name,
@@ -36,6 +47,8 @@ class FileItem {
       progress: progress ?? this.progress,
       outputPath: outputPath ?? this.outputPath,
       error: error ?? this.error,
+      detectedType: detectedType ?? this.detectedType,
+      detectedFormat: detectedFormat ?? this.detectedFormat,
     );
   }
 }
@@ -47,6 +60,10 @@ class FormatOption {
   final String? category;
   const FormatOption({required this.label, required this.value, this.category});
 }
+
+/// 其他应用分享/打开进来的文件路径：main 写入，HomePage 监听后打开转换配置页
+/// （而不是直接开始转换）。处理完置回 null。
+final incomingFileProvider = StateProvider<String?>((ref) => null);
 
 // ── 主状态 ──
 class HomeState {
@@ -77,28 +94,24 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   void switchTab(int index) => state = state.copyWith(currentTab: index);
 
-  /// 从其他应用分享/打开进来的文件：直接进文件列表并开始处理
-  void addExternalFile(String filePath) {
-    final name = filePath.split(Platform.pathSeparator).last;
-    final item = FileItem(
-      name: name,
-      path: filePath,
-      status: FileStatus.processing,
-    );
-    state = state.copyWith(
-      files: [item, ...state.files],
-      currentTab: 1,
-    );
-    _runProcess(0, filePath, null);
+  /// 开始处理（当前为模拟进度，真实转换引擎后续接入）
+  Future<void> startConvert(String filePath, {String? outputExt}) {
+    return _createAndRun(filePath, outputExt);
   }
 
-  /// 开始处理（当前为模拟进度，真实转换引擎后续接入）
-  void startConvert(String filePath, {String? outputExt}) {
+  /// 建列表项的统一入口：先自动识别文件类型/格式，再启动处理
+  Future<void> _createAndRun(String filePath, String? outputExt) async {
     final name = filePath.split(Platform.pathSeparator).last;
+
+    // 自动识别（文件头魔数 + 扩展名），读不到文件时内部会降级
+    final detected = await FileTypeDetector.detect(filePath);
+
     final item = FileItem(
       name: name,
       path: filePath,
       status: FileStatus.processing,
+      detectedType: detected.isKnown ? detected.typeLabel : null,
+      detectedFormat: detected.formatExt.isEmpty ? null : detected.formatExt,
     );
 
     state = state.copyWith(
@@ -220,7 +233,6 @@ final outputTypeOptions = [
   const FormatOption(label: '视频', value: 'video'),
   const FormatOption(label: '文档', value: 'document'),
   const FormatOption(label: '压缩包', value: 'archive'),
-  const FormatOption(label: '我的世界', value: 'mc', category: '我的世界'),
 ];
 
 final Map<String, List<FormatOption>> inputFormatsByType = {
@@ -311,12 +323,4 @@ final Map<String, List<FormatOption>> outputFormatsByType = {
     FormatOption(label: '.7z', value: '7z'),
     FormatOption(label: '.tar.gz', value: 'tar.gz'),
   ],
-  'mc': const [
-    FormatOption(label: '.mcaddon', value: 'mcaddon'),
-    FormatOption(label: '.mcpack', value: 'mcpack'),
-    FormatOption(label: '.mcworld', value: 'mcworld'),
-  ],
 };
-
-// 我的世界版本
-final mcVersions = ['1.21.4', '1.21.1', '1.20.6', '1.20.1', '1.19.4', '1.18.2'];

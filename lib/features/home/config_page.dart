@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../utils/file_type_detector.dart';
 import 'home_provider.dart';
 
 class ConfigPage extends ConsumerStatefulWidget {
@@ -19,8 +20,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   FormatOption? _outputFormat;
 
   bool _showAdvanced = false;
-  String? _mcSource;
-  String? _mcTarget;
   double _fps = 15;
   bool _loop = true;
 
@@ -30,29 +29,30 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     _autoDetect();
   }
 
-  /// 根据文件扩展名自动识别输入类型和输入格式
-  void _autoDetect() {
-    final path = widget.initialFilePath;
-    final dot = path.lastIndexOf('.');
-    if (dot < 0) return;
-    final ext = path.substring(dot + 1).toLowerCase();
+  /// 自动识别输入类型和输入格式（文件头魔数 + 扩展名），进页面直接预填
+  Future<void> _autoDetect() async {
+    final detected = await FileTypeDetector.detect(widget.initialFilePath);
+    if (!detected.isKnown || !mounted) return;
 
-    for (final entry in inputFormatsByType.entries) {
-      for (final f in entry.value) {
-        final parts = f.label.replaceAll(' ', '').split('/');
-        final match =
-            parts.any((p) => p.replaceAll('.', '').toLowerCase() == ext) ||
-                f.value == ext;
-        if (match) {
-          _inputType = inputTypeOptions.firstWhere(
-            (o) => o.value == entry.key,
-            orElse: () => FormatOption(label: entry.key, value: entry.key),
-          );
-          _inputFormat = f;
-          return;
-        }
-      }
-    }
+    // 类型：detected.typeKey 与 inputTypeOptions 的 value 对齐
+    final type = inputTypeOptions.firstWhere(
+      (o) => o.value == detected.typeKey,
+      orElse: () => FormatOption(
+          label: detected.typeLabel, value: detected.typeKey),
+    );
+
+    // 格式：在该类型下按 value 匹配，找不到就用识别结果临时构造一个
+    final list = inputFormatsByType[detected.typeKey] ?? const [];
+    final format = list.firstWhere(
+      (f) => f.value == detected.formatExt,
+      orElse: () => FormatOption(
+          label: detected.formatLabel, value: detected.formatExt),
+    );
+
+    setState(() {
+      _inputType = type;
+      _inputFormat = format;
+    });
   }
 
   @override
@@ -186,84 +186,17 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   }
 
   Widget _advanced() {
-    final isMc = _inputType?.value.startsWith('mc') == true ||
-        _outputType?.value == 'mc';
     final isGif = _outputFormat?.value == 'gif';
 
     return Column(
       children: [
-        if (isMc) _mcCard(),
         if (isGif) _gifCard(),
-        if (!isMc && !isGif)
+        if (!isGif)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
-            child: Text('选择「我的世界」或 GIF 输出后，这里会出现对应参数',
+            child: Text('选择 GIF 输出后，这里会出现对应参数',
                 style: TextStyle(color: Colors.grey, fontSize: 13)),
           ),
-      ],
-    );
-  }
-
-  Widget _mcCard() {
-    return Card(
-      margin: const EdgeInsets.only(top: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('我的世界互转', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _versionBox(
-                      '源版本', _mcSource, (v) => setState(() => _mcSource = v)),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('→'),
-                ),
-                Expanded(
-                  child: _versionBox(
-                      '目标版本', _mcTarget, (v) => setState(() => _mcTarget = v)),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _versionBox(String label, String? value, ValueChanged<String> onPick) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 6),
-        InkWell(
-          onTap: () => _pick(
-            title: '选择$label',
-            options:
-                mcVersions.map((v) => FormatOption(label: v, value: v)).toList(),
-            onSelect: (o) => onPick(o.value),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade400),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(value ?? '选择'),
-                const Icon(Icons.arrow_drop_down, size: 20),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }

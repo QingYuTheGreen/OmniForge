@@ -4,8 +4,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// 文件名过长时的展示方式
 enum FileNameDisplay { marquee, multiline }
 
-/// 桌面图标样式
-enum AppIcon { classic, newOne }
+/// 桌面图标样式（默认循环箭头，可切换铁砧 / 火焰）
+enum AppIcon { defaultIcon, anvil, flame }
+
+extension AppIconAlias on AppIcon {
+  /// dynamic_app_icon_changer 用的别名；默认图标传 null
+  String? get aliasName {
+    switch (this) {
+      case AppIcon.defaultIcon:
+        return null;
+      case AppIcon.anvil:
+        return 'IconAnvil';
+      case AppIcon.flame:
+        return 'IconFlame';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case AppIcon.defaultIcon:
+        return '循环箭头';
+      case AppIcon.anvil:
+        return '铁砧';
+      case AppIcon.flame:
+        return '火焰';
+    }
+  }
+}
 
 class SettingsState {
   final ThemeMode themeMode;
@@ -19,7 +44,7 @@ class SettingsState {
     this.dynamicColor = true,
     this.seedColor = Colors.teal,
     this.fileNameDisplay = FileNameDisplay.marquee,
-    this.appIcon = AppIcon.classic,
+    this.appIcon = AppIcon.defaultIcon,
   });
 
   SettingsState copyWith({
@@ -57,6 +82,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>((ref) {
   return SettingsNotifier();
 });
+
+/// 系统是否真的提供了壁纸配色（DynamicColorBuilder 每次构建时回写）。
+/// 开关打开但该值为 false，说明系统侧没给颜色（MIUI 常见），需去系统设置开启。
+final wallpaperColorAvailableProvider = StateProvider<bool>((ref) => false);
 
 /// 预设色块（对应设置页参考图的 6 个颜色）
 const presetColors = [
