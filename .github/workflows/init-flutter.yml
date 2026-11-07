@@ -1,4 +1,4 @@
-name: 一键生成 Flutter 全平台骨架（包含鸿蒙）
+name: 一键生成 Flutter 全平台骨架
 
 on:
   workflow_dispatch:
@@ -11,18 +11,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. 克隆 CPF-Flutter 鸿蒙适配版 SDK
+      # 1. 先用官方标准版 Flutter 生成常规平台
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+
+      - name: 生成标准平台骨架
+        run: flutter create . --project-name omniforge --org com.omniforge.app --platforms=android,ios,web,windows,macos,linux
+
+      # 2. 完整克隆鸿蒙版 Flutter SDK（不使用 --depth 1，避免版本号丢失）
       - name: 安装 CPF-Flutter 鸿蒙 SDK
         run: |
-          git clone --depth 1 -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          git clone -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
           echo "PATH=/opt/flutter_ohos/bin:$PATH" >> $GITHUB_ENV
 
-      # 2. 使用鸿蒙版 SDK 生成全平台骨架（含 ohos 目录）
-      - name: 生成全平台骨架
+      # 3. 配置 OpenHarmony SDK 路径（解决 No Hmos SDK found）
+      - name: 配置 OpenHarmony SDK
         run: |
-          flutter create . --project-name omniforge --platforms=android,ios,web,windows,macos,linux,ohos
+          # 创建 SDK 目录结构（根据实际 SDK 版本调整）
+          mkdir -p /opt/ohos-sdk
+          # 执行 flutter config 指定 SDK 路径
+          flutter config --ohos-sdk=/opt/ohos-sdk
 
-      # 3. 自动提交回仓库
+      # 4. 只生成鸿蒙目录（必须带 --org 参数）
+      - name: 生成鸿蒙骨架
+        run: |
+          flutter create . --project-name omniforge --org com.omniforge.app --platforms=ohos
+
+      # 5. 提交更改
       - name: 提交更改
         run: |
           git config --local user.email "action@github.com"
