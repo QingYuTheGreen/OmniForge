@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../utils/output_paths.dart';
+import '../../utils/output_paths.dart';
 import 'settings_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -314,7 +314,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           shape: BoxShape.circle,
           border: selected ? Border.all(color: Colors.white, width: 3) : null,
           boxShadow: selected
-              ? [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6, spread: 1)]
+              ? [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6, spreadRadius: 1)]
               : null,
         ),
         child: selected
