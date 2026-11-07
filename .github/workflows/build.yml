@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+  actions: read
+
 env:
   WORK_DIR: .
   # 应用名：用于产物命名，换项目只需改这一行
@@ -305,17 +309,22 @@ jobs:
       - name: 构建 iOS（无签名 .app）
         run: flutter build ios --release --no-codesign
 
-      - name: 打包产物（保留可执行权限）
+      - name: 打包无签名 .ipa
         run: |
           cd build/ios/iphoneos
           ls -la
-          ditto -c -k --sequesterRsrc --keepParent Runner.app ../../../../${{ env.APP_NAME }}-ios-arm64.zip
+          rm -rf Payload "$RUNNER_TEMP/Payload"
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R Runner.app "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -qry "$GITHUB_WORKSPACE/${{ env.APP_NAME }}-ios-arm64-unsigned.ipa" Payload
+          ls -lh "$GITHUB_WORKSPACE/${{ env.APP_NAME }}-ios-arm64-unsigned.ipa"
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: ios-arm64
-          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-ios-arm64.zip
+          name: ios-arm64-unsigned
+          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-ios-arm64-unsigned.ipa
           retention-days: 30
 
   # ═══════════════════════════════════════
@@ -452,3 +461,4 @@ jobs:
             artifacts/**/*.zip
             artifacts/**/*.tar.gz
             artifacts/**/*.hap
+            artifacts/**/*.ipa
