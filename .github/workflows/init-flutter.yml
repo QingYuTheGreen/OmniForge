@@ -8,40 +8,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        working-directory: .
     steps:
       - uses: actions/checkout@v4
 
-      # 1. 下载 OpenHarmony SDK
-      - name: 下载 OpenHarmony SDK
-        run: |
-          wget --tries=3 --timeout=60 -O commandline-tools.zip \
-            https://repo.huaweicloud.com/openharmony/developtools/commandline/4.0/commandline-tools-linux-x64-4.0.0.zip
-          unzip -q commandline-tools.zip -d /opt/ohos-sdk
-          echo "OHOS_SDK=/opt/ohos-sdk" >> $GITHUB_ENV
-          echo "HOS_SDK_HOME=/opt/ohos-sdk" >> $GITHUB_ENV
-          echo "DEVECO_SDK_HOME=/opt/ohos-sdk" >> $GITHUB_ENV
-          echo "OHOS_SDK_HOME=/opt/ohos-sdk" >> $GITHUB_ENV
-
-      # 2. 克隆 CPF-Flutter（不装标准 Flutter，避免冲突）
       - name: 安装 CPF-Flutter 鸿蒙 SDK
         run: |
-          git clone -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          git clone --depth 1 -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
           echo "/opt/flutter_ohos/bin" >> $GITHUB_PATH
           chmod +x /opt/flutter_ohos/bin/flutter
           chmod +x /opt/flutter_ohos/bin/dart
 
-      # 3. 生成全平台骨架（包含 ohos）
       - name: 生成全平台骨架
         run: |
           which flutter
           flutter --version
           flutter config --enable-windows-desktop --enable-macos-desktop --enable-linux-desktop
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=android,ios,web,windows,macos,linux,ohos
 
-      # 4. 提交回仓库
+          # 项目已存在 pubspec.yaml，这里只补全平台目录
+          flutter create . \
+            --project-name omniforge \
+            --org com.omniforge.app \
+            --platforms=android,ios,web,windows,macos,linux,ohos
+
       - name: 提交更改
         run: |
           git config --local user.email "action@github.com"
