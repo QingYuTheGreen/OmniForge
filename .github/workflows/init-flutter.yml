@@ -13,15 +13,21 @@ jobs:
 
       - name: 安装 CPF-Flutter 鸿蒙 SDK
         run: |
-          git clone --depth 1 -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          # 注意：不能用 --depth 1 浅克隆，否则 git describe 拿不到版本号，
+          # Flutter 会识别成 0.0.0-unknown，导致 pub get 依赖解析失败
+          git clone -b 3.22.0-ohos https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
           echo "/opt/flutter_ohos/bin" >> $GITHUB_PATH
           chmod +x /opt/flutter_ohos/bin/flutter
           chmod +x /opt/flutter_ohos/bin/dart
 
-      - name: 生成全平台骨架
+      - name: 验证 Flutter 版本
         run: |
           which flutter
           flutter --version
+          flutter config --no-analytics
+
+      - name: 生成全平台骨架
+        run: |
           flutter config --enable-windows-desktop --enable-macos-desktop --enable-linux-desktop
 
           # 项目已存在 pubspec.yaml，这里只补全平台目录
@@ -29,6 +35,9 @@ jobs:
             --project-name omniforge \
             --org com.omniforge.app \
             --platforms=android,ios,web,windows,macos,linux,ohos
+
+          echo "=== 生成结果 ==="
+          ls -d android ios web windows macos linux ohos 2>/dev/null || true
 
       - name: 提交更改
         run: |
