@@ -31,10 +31,6 @@ jobs:
           channel: stable
           cache: true
 
-      - name: 补全平台目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=android
-
       - name: 安装依赖
         run: flutter pub get
 
@@ -55,10 +51,12 @@ jobs:
   # 2. Windows x64
   # ═══════════════════════════════════════
   windows-x64:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         working-directory: ${{ env.WORK_DIR }}
+    env:
+      CMAKE_GENERATOR: "Visual Studio 17 2022"
     steps:
       - uses: actions/checkout@v4
 
@@ -70,10 +68,6 @@ jobs:
 
       - name: 启用 Windows 桌面支持
         run: flutter config --enable-windows-desktop
-
-      - name: 补全平台目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=windows
 
       - name: 安装依赖
         run: flutter pub get
@@ -108,10 +102,6 @@ jobs:
       - name: 启用 Windows 桌面支持
         run: flutter config --enable-windows-desktop
 
-      - name: 补全平台目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=windows
-
       - name: 安装依赖
         run: flutter pub get
 
@@ -144,10 +134,6 @@ jobs:
 
       - name: 启用 macOS 桌面支持
         run: flutter config --enable-macos-desktop
-
-      - name: 补全平台目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=macos
 
       - name: 安装依赖
         run: flutter pub get
@@ -192,10 +178,6 @@ jobs:
       - name: 启用 Linux 桌面支持
         run: flutter config --enable-linux-desktop
 
-      - name: 补全平台目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=linux
-
       - name: 安装依赖
         run: flutter pub get
 
@@ -234,10 +216,6 @@ jobs:
       - name: 启用 Linux 桌面支持
         run: flutter config --enable-linux-desktop
 
-      - name: 补全平台目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=linux
-
       - name: 安装依赖
         run: flutter pub get
 
@@ -267,10 +245,6 @@ jobs:
         with:
           channel: stable
           cache: true
-
-      - name: 补全 iOS 平台目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=ios
 
       - name: 安装依赖
         run: flutter pub get
@@ -322,10 +296,6 @@ jobs:
         run: |
           which flutter
           flutter --version
-
-      - name: 生成 ohos 工程目录
-        run: |
-          flutter create . --project-name omniforge --org com.omniforge.app --platforms=ohos
 
       - name: 编译 HAP
         run: |
