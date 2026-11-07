@@ -300,7 +300,7 @@ jobs:
         run: flutter pub get
 
       - name: 生成 Xcode 配置（供 CocoaPods 读取）
-        run: flutter build ios --release --config-only
+        run: flutter build ios --release --config-only --no-codesign
 
       - name: 构建 iOS（无签名 .app）
         run: flutter build ios --release --no-codesign
@@ -362,17 +362,21 @@ jobs:
           cat commandline-tools-linux-x64-26.0.0.821.7z.* > combined.7z
           ls -lh combined.7z
           7z x combined.7z -oextract -y > /dev/null
+          rm -f commandline-tools-linux-x64-26.0.0.821.7z.* combined.7z
           ZIP_FILE=$(find extract -name "*.zip" -type f | head -1)
           echo "ZIP: $ZIP_FILE"
+          rm -rf /tmp/ohsdk && mkdir -p /tmp/ohsdk
+          unzip -q "$ZIP_FILE" -d /tmp/ohsdk
+          sudo rm -rf /opt/command-line-tools
           sudo mkdir -p /opt/command-line-tools
-          sudo unzip -q "$ZIP_FILE" -d /opt/command-line-tools
-          if [ -d "/opt/command-line-tools/command-line-tools" ]; then
-            sudo mv /opt/command-line-tools/command-line-tools/* /opt/command-line-tools/
-            sudo rm -rf /opt/command-line-tools/command-line-tools
+          if [ -d /tmp/ohsdk/command-line-tools ]; then
+            sudo cp -a /tmp/ohsdk/command-line-tools/. /opt/command-line-tools/
+          else
+            sudo cp -a /tmp/ohsdk/. /opt/command-line-tools/
           fi
           sudo chmod -R 755 /opt/command-line-tools
           ls /opt/command-line-tools
-          rm -rf /tmp/cli-tools
+          rm -rf /tmp/cli-tools /tmp/ohsdk
 
       - name: 配置 HarmonyOS 环境变量
         run: |
