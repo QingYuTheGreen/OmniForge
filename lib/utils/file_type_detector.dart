@@ -43,7 +43,7 @@ class FileTypeDetector {
 
     Uint8List? head;
     try {
-      final raf = await File(path).open(0);
+      final raf = await File(path).open();
       head = await raf.read(16);
       await raf.close();
     } catch (_) {
@@ -140,7 +140,7 @@ class FileTypeDetector {
     if (startsWith([0x50, 0x4B, 0x03, 0x04])) {
       final mcType = _extType[ext];
       if (mcType == 'mc_bedrock' || mcType == 'mc_java') {
-        return _r(mcType, ext, ext);
+        return _r(mcType!, ext, ext);
       }
       return _r('archive', ext.isEmpty ? 'zip' : ext, ext);
     }

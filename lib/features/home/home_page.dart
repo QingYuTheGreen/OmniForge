@@ -352,10 +352,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
     try {
-      // share_plus v10.x 新 API（适配版自带 ohos 实现，全平台统一）
-      await SharePlus.instance.share(
-        ShareParams(files: [SharedFile(path: path)], text: file.name),
-      );
+      // share_plus 适配版（10.1.1 仍为 Share.shareXFiles 静态 API，自带 ohos 实现）
+      await Share.shareXFiles([XFile(path)], text: file.name);
     } catch (e) {
       _toast('分享失败：$e');
     }

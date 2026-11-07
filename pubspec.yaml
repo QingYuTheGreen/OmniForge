@@ -5,31 +5,31 @@ version: 1.0.0+1
 publish_to: 'none'
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.6.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
   yaml: ^3.1.2
-  # 鸿蒙走 CPF-Flutter 官方适配分支（带 ohos 原生实现，其他平台仍走官方 fork 内实现）
-  # path_provider: 官方 federated 插件，CPF monorepo 内
+  # ── 以下 4 个为 CPF-Flutter 官方 OpenHarmony 适配版（git 依赖，自带 ohos 原生实现）──
+  # path_provider：官方 federated 插件，CPF monorepo 内
   path_provider:
     git:
       url: https://gitcode.com/CPF-Flutter/flutter_packages.git
       path: packages/path_provider/path_provider
       ref: br_path_provider-v2.1.5_ohos
-  # file_picker: 社区适配版
+  # file_picker：社区适配版，保留原包名 file_picker
   file_picker:
     git:
       url: https://gitcode.com/CPF-Flutter/fluttertpc_file_picker.git
       ref: br_v8.0.7_ohos
-  # open_filex: 社区适配版
+  # open_filex：社区适配版
   open_filex:
     git:
       url: https://gitcode.com/CPF-Flutter/fluttertpc_open_filex.git
       ref: br_v4.5.0_ohos
-  # share_plus: 社区适配版（跨 monorepo，API 已升级到 v10.x 的 SharePlus.instance.share）
+  # share_plus：社区适配版（monorepo 子目录；Dart API 仍是 Share.shareXFiles）
   share_plus:
     git:
       url: https://gitcode.com/CPF-Flutter/flutter_plus_plugins.git
@@ -43,10 +43,25 @@ dependencies:
   device_info_plus: ^10.1.0
   # 公共目录写入权限申请（仅 Android 用）
   permission_handler: ^11.3.0
-  # 接收其他应用分享/打开的文件（Android + iOS；ohos 由自建通道接管）
-  receive_sharing_intent: ^1.8.1
+  # 接收其他应用分享/打开的文件（Android + iOS，钉死基线版本避免意外升级）
+  receive_sharing_intent: 1.8.1
   # 运行时切换桌面图标（Android activity-alias + iOS 备选图标）
   dynamic_app_icon_changer: ^0.0.3
+
+# ── 官方适配分支之间互相打架的两处，统一版本源 ──
+dependency_overrides:
+  # share_plus 的 platform_interface 把 path_provider 钉在
+  # openharmony-sig/flutter_packages ref master，与上面的 CPF-Flutter 分支同为 git 源但
+  # url/ref 不同，pub 会判定冲突；这里强制统一到同一条 2.1.5_ohos 分支。
+  path_provider:
+    git:
+      url: https://gitcode.com/CPF-Flutter/flutter_packages.git
+      path: packages/path_provider/path_provider
+      ref: br_path_provider-v2.1.5_ohos
+  # share_plus 依赖的 url_launcher_web 要求 web ^1.x，file_picker 8.0.7 要求 web ^0.5.x。
+  # 本项目不构建 web（CI 只出 apk/windows/macos/linux/ios/hap），web 平台代码不会被编译，
+  # 统一到 1.x 即可，file_picker 的 web 实现不参与任何实际构建。
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:
