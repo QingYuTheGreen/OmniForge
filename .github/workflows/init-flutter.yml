@@ -26,17 +26,30 @@ jobs:
           flutter --version
           flutter config --no-analytics
 
-      - name: 生成全平台骨架
+      - name: 生成其他平台骨架
         run: |
           flutter config --enable-windows-desktop --enable-macos-desktop --enable-linux-desktop
-
-          # 项目已存在 pubspec.yaml，这里只补全平台目录
           flutter create . \
             --project-name omniforge \
             --org com.omniforge.app \
-            --platforms=android,ios,web,windows,macos,linux,ohos
+            --platforms=android,ios,web,windows,macos,linux
 
-          echo "=== 生成结果 ==="
+      - name: 生成鸿蒙工程骨架（占位 SDK）
+        continue-on-error: true
+        run: |
+          # 生成 ohos 骨架时 flutter create 会检查 HOS_SDK_HOME，
+          # 这里给个空目录占位，只用于生成工程目录模板，不真正编译
+          mkdir -p /opt/hos-sdk
+          echo "HOS_SDK_HOME=/opt/hos-sdk" >> $GITHUB_ENV
+          echo "OHOS_SDK_HOME=/opt/hos-sdk" >> $GITHUB_ENV
+          flutter create . \
+            --project-name omniforge \
+            --org com.omniforge.app \
+            --platforms=ohos
+
+      - name: 生成结果
+        run: |
+          echo "=== 平台目录 ==="
           ls -d android ios web windows macos linux ohos 2>/dev/null || true
 
       - name: 提交更改
