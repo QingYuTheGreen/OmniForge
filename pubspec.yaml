@@ -28,7 +28,7 @@ dependencies:
   open_filex:
     git:
       url: https://gitcode.com/CPF-Flutter/fluttertpc_open_filex.git
-      ref: br_v4.5.0_ohos
+      ref: br_v4.7.0_ohos
   # share_plus：社区适配版（monorepo 子目录；Dart API 仍是 Share.shareXFiles）
   share_plus:
     git:

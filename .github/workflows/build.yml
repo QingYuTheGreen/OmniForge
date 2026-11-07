@@ -93,6 +93,10 @@ jobs:
       - name: 启用 Windows 桌面支持
         run: flutter config --enable-windows-desktop
 
+      - name: 允许 Windows 长路径（CPF git 依赖路径超 260 字符）
+        shell: bash
+        run: git config --global core.longpaths true
+
       - name: 安装依赖
         run: flutter pub get
 
@@ -131,6 +135,10 @@ jobs:
 
       - name: 启用 Windows 桌面支持
         run: flutter config --enable-windows-desktop
+
+      - name: 允许 Windows 长路径（CPF git 依赖路径超 260 字符）
+        shell: bash
+        run: git config --global core.longpaths true
 
       - name: 安装依赖
         run: flutter pub get
