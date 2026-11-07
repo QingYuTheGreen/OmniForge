@@ -12,6 +12,10 @@ concurrency:
 
 env:
   WORK_DIR: .
+  # 应用名：用于产物命名，换项目只需改这一行
+  APP_NAME: omniforge
+  # 固定 Flutter 版本，避免上游 stable 升级导致工具链要求漂移
+  FLUTTER_VERSION: '3.47.9'
 
 jobs:
   # ═══════════════════════════════════════
@@ -25,10 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: 安装 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: 安装依赖
@@ -37,14 +48,22 @@ jobs:
       - name: 构建 APK（按 ABI 拆分：arm64-v8a / armeabi-v7a / x86_64）
         run: flutter build apk --release --split-per-abi
 
+      - name: 重命名产物
+        run: |
+          cd build/app/outputs/flutter-apk
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            mv "app-$abi-release.apk" "${{ env.APP_NAME }}-$abi-release.apk"
+          done
+          ls -lh
+
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: android
           path: |
-            ${{ env.WORK_DIR }}/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            ${{ env.WORK_DIR }}/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            ${{ env.WORK_DIR }}/build/app/outputs/flutter-apk/app-x86_64-release.apk
+            ${{ env.WORK_DIR }}/build/app/outputs/flutter-apk/${{ env.APP_NAME }}-arm64-v8a-release.apk
+            ${{ env.WORK_DIR }}/build/app/outputs/flutter-apk/${{ env.APP_NAME }}-armeabi-v7a-release.apk
+            ${{ env.WORK_DIR }}/build/app/outputs/flutter-apk/${{ env.APP_NAME }}-x86_64-release.apk
           retention-days: 30
 
   # ═══════════════════════════════════════
@@ -64,6 +83,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: 启用 Windows 桌面支持
@@ -75,11 +95,17 @@ jobs:
       - name: 构建 Windows x64
         run: flutter build windows --release
 
+      - name: 打包 x64 产物
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "build/windows/x64/runner/Release/*" -DestinationPath "${{ env.APP_NAME }}-windows-x64.zip" -Force
+          Get-Item "${{ env.APP_NAME }}-windows-x64.zip" | Select-Object Name, Length
+
       - name: 上传 x64 产物
         uses: actions/upload-artifact@v4
         with:
           name: windows-x64
-          path: ${{ env.WORK_DIR }}/build/windows/x64/runner/Release/
+          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-windows-x64.zip
           retention-days: 30
 
   # ═══════════════════════════════════════
@@ -97,6 +123,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: 启用 Windows 桌面支持
@@ -108,11 +135,17 @@ jobs:
       - name: 构建 Windows ARM64
         run: flutter build windows --release
 
+      - name: 打包 ARM64 产物
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "build/windows/arm64/runner/Release/*" -DestinationPath "${{ env.APP_NAME }}-windows-arm64.zip" -Force
+          Get-Item "${{ env.APP_NAME }}-windows-arm64.zip" | Select-Object Name, Length
+
       - name: 上传 ARM64 产物
         uses: actions/upload-artifact@v4
         with:
           name: windows-arm64
-          path: ${{ env.WORK_DIR }}/build/windows/arm64/runner/Release/
+          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-windows-arm64.zip
           retention-days: 30
 
   # ═══════════════════════════════════════
@@ -130,6 +163,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: 启用 macOS 桌面支持
@@ -138,19 +172,25 @@ jobs:
       - name: 安装依赖
         run: flutter pub get
 
-      - name: 安装 CocoaPods 依赖
-        run: |
-          cd macos
-          pod install --repo-update
-
       - name: 构建 macOS Universal（x64 + ARM64）
-        run: flutter build macos --release
+        run: |
+          flutter build macos --release
+          lipo -info build/macos/Build/Products/Release/omniforge.app/Contents/MacOS/omniforge
+          lipo -archs build/macos/Build/Products/Release/omniforge.app/Contents/MacOS/omniforge | tee /tmp/archs.txt
+          grep -q arm64 /tmp/archs.txt
+          grep -q x86_64 /tmp/archs.txt
+
+      - name: 打包产物（保留可执行权限）
+        run: |
+          cd build/macos/Build/Products/Release
+          ls -la
+          ditto -c -k --sequesterRsrc --keepParent omniforge.app ../../../../../${{ env.APP_NAME }}-macos-universal.zip
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: macos-universal
-          path: ${{ env.WORK_DIR }}/build/macos/Build/Products/Release/
+          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-macos-universal.zip
           retention-days: 30
 
   # ═══════════════════════════════════════
@@ -173,6 +213,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: 启用 Linux 桌面支持
@@ -184,11 +225,16 @@ jobs:
       - name: 构建 Linux x64
         run: flutter build linux --release
 
+      - name: 打包产物
+        run: |
+          cd build/linux/x64/release
+          tar -czf ../../../../../${{ env.APP_NAME }}-linux-x64.tar.gz bundle
+
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: linux-x64
-          path: ${{ env.WORK_DIR }}/build/linux/x64/release/bundle/
+          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-linux-x64.tar.gz
           retention-days: 30
 
   # ═══════════════════════════════════════
@@ -211,6 +257,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: 启用 Linux 桌面支持
@@ -222,11 +269,16 @@ jobs:
       - name: 构建 Linux ARM64
         run: flutter build linux --release
 
+      - name: 打包产物
+        run: |
+          cd build/linux/arm64/release
+          tar -czf ../../../../../${{ env.APP_NAME }}-linux-arm64.tar.gz bundle
+
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: linux-arm64
-          path: ${{ env.WORK_DIR }}/build/linux/arm64/release/bundle/
+          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-linux-arm64.tar.gz
           retention-days: 30
 
   # ═══════════════════════════════════════
@@ -244,29 +296,35 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: 安装依赖
         run: flutter pub get
 
-      - name: 安装 CocoaPods
+      - name: 安装 CocoaPods 依赖
         run: |
-          sudo gem install cocoapods
           cd ios
-          pod install --repo-update
+          pod install
 
       - name: 构建 iOS（无签名 .app）
         run: flutter build ios --release --no-codesign
+
+      - name: 打包产物（保留可执行权限）
+        run: |
+          cd build/ios/iphoneos
+          ls -la
+          ditto -c -k --sequesterRsrc --keepParent Runner.app ../../../../${{ env.APP_NAME }}-ios-arm64.zip
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: ios-arm64
-          path: ${{ env.WORK_DIR }}/build/ios/iphoneos/
+          path: ${{ env.WORK_DIR }}/${{ env.APP_NAME }}-ios-arm64.zip
           retention-days: 30
 
   # ═══════════════════════════════════════
-  # 6. 鸿蒙 OHOS: CPF-Flutter 官方 SDK
+  # 6. 鸿蒙 OHOS: HAP
   # ═══════════════════════════════════════
   ohos:
     runs-on: ubuntu-latest
@@ -279,36 +337,91 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 安装 JDK 17
+      - name: 安装系统依赖
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk
-          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+          sudo apt-get install -y p7zip-full unzip curl git
 
-      - name: 安装 CPF-Flutter SDK
+      - name: 安装 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 下载并安装 HarmonyOS 命令行工具
         run: |
-          git clone https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          set -e
+          mkdir -p /tmp/cli-tools && cd /tmp/cli-tools
+          BASE_URL="https://raw.githubusercontent.com/xiaobingtech/commandline-tools-linux-x64-6.1.0.830/refs/heads/main"
+          for i in $(seq -f "%03g" 1 20); do
+            FILENAME="commandline-tools-linux-x64-6.1.0.830.7z.$i"
+            for attempt in 1 2 3; do
+              if curl -fL --retry 3 --retry-delay 5 --max-time 600 -o "$FILENAME" "$BASE_URL/$FILENAME"; then
+                break
+              fi
+              echo "重试 $FILENAME (第 $attempt 次)..."
+              sleep 5
+            done
+            [ -s "$FILENAME" ] || { echo "下载失败: $FILENAME"; exit 1; }
+          done
+          cat commandline-tools-linux-x64-6.1.0.830.7z.* > combined.7z
+          ls -lh combined.7z
+          7z x combined.7z -oextract -y > /dev/null
+          ZIP_FILE=$(find extract -name "*.zip" -type f | head -1)
+          echo "ZIP: $ZIP_FILE"
+          sudo mkdir -p /opt/command-line-tools
+          sudo unzip -q "$ZIP_FILE" -d /opt/command-line-tools
+          if [ -d "/opt/command-line-tools/command-line-tools" ]; then
+            sudo mv /opt/command-line-tools/command-line-tools/* /opt/command-line-tools/
+            sudo rm -rf /opt/command-line-tools/command-line-tools
+          fi
+          sudo chmod -R 755 /opt/command-line-tools
+          ls /opt/command-line-tools
+          rm -rf /tmp/cli-tools
+
+      - name: 配置 HarmonyOS 环境变量
+        run: |
+          echo "DEVECO_SDK_HOME=/opt/command-line-tools/sdk" >> $GITHUB_ENV
+          echo "HOS_SDK_HOME=/opt/command-line-tools/sdk" >> $GITHUB_ENV
+          echo "TOOL_HOME=/opt/command-line-tools" >> $GITHUB_ENV
+          echo "/opt/command-line-tools/bin" >> $GITHUB_PATH
+          echo "/opt/command-line-tools/hvigor/bin" >> $GITHUB_PATH
+          echo "/opt/command-line-tools/ohpm/bin" >> $GITHUB_PATH
+          echo "/opt/command-line-tools/sdk/default/openharmony/toolchains" >> $GITHUB_PATH
+          # ohpm 镜像
+          /opt/command-line-tools/bin/ohpm config set registry https://ohpm.openharmony.cn/ohpm/ || true
+          # hvigor 依赖走的 npm 源
+          npm config set registry https://repo.huaweicloud.com/repository/npm/
+
+      - name: 安装 OHOS Flutter SDK
+        run: |
+          set -e
+          git clone --depth 1 --branch oh-3.44.9-release \
+            https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
+          chmod +x /opt/flutter_ohos/bin/flutter /opt/flutter_ohos/bin/dart
           echo "/opt/flutter_ohos/bin" >> $GITHUB_PATH
-          chmod +x /opt/flutter_ohos/bin/flutter
-          chmod +x /opt/flutter_ohos/bin/dart
 
-      - name: 验证 Flutter 版本
+      - name: 验证工具链
         run: |
-          which flutter
+          which flutter ohpm hvigorw || true
           flutter --version
+          ohpm --version || true
+          ls "$DEVECO_SDK_HOME"
+
+      - name: 安装依赖
+        run: flutter pub get
 
       - name: 编译 HAP
-        run: |
-          flutter build app --release
+        run: flutter build hap --release
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: ohos
           path: |
-            ${{ env.WORK_DIR }}/ohos/
-            ${{ env.WORK_DIR }}/build/
+            ${{ env.WORK_DIR }}/ohos/entry/build/default/outputs/**/*.hap
           retention-days: 30
+          if-no-files-found: error
 
   # ═══════════════════════════════════════
   # 7. 汇总：发 Release
@@ -318,8 +431,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: 下载所有产物
         uses: actions/download-artifact@v4
         with:
@@ -334,6 +445,6 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/**/*.apk
-            artifacts/**/*.exe
-            artifacts/**/*.app
-            artifacts/**/*.ipa
+            artifacts/**/*.zip
+            artifacts/**/*.tar.gz
+            artifacts/**/*.hap

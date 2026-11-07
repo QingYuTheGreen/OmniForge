@@ -10,6 +10,7 @@ class FileItem {
   final FileStatus status;
   final double progress;
   final String? outputPath;
+  final String? error;
 
   const FileItem({
     required this.name,
@@ -17,12 +18,14 @@ class FileItem {
     required this.status,
     this.progress = 0,
     this.outputPath,
+    this.error,
   });
 
   FileItem copyWith({
     FileStatus? status,
     double? progress,
     String? outputPath,
+    String? error,
   }) {
     return FileItem(
       name: name,
@@ -30,6 +33,7 @@ class FileItem {
       status: status ?? this.status,
       progress: progress ?? this.progress,
       outputPath: outputPath ?? this.outputPath,
+      error: error ?? this.error,
     );
   }
 }
@@ -125,6 +129,15 @@ class HomeNotifier extends StateNotifier<HomeState> {
     final updated = List<FileItem>.from(state.files);
     updated.removeAt(index);
     state = state.copyWith(files: updated);
+  }
+
+  void retryConvert(int index) {
+    final file = state.files[index];
+    startConvert(file.path);
+  }
+
+  Future<void> pickFile() async {
+    // 占位：由 home_page 中的文件选择逻辑处理
   }
 
   @override

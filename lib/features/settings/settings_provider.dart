@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// 主题模式
-enum ThemeMode { system, light, dark }
-
 // 状态
 class SettingsState {
   final ThemeMode themeMode;
