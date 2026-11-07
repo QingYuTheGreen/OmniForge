@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_provider.dart';
@@ -18,14 +19,45 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   FormatOption? _outputFormat;
 
   bool _showAdvanced = false;
-  String? _mcSourceVersion;
-  String? _mcTargetVersion;
-  bool _isMidi = false;
+  String? _mcSource;
+  String? _mcTarget;
   double _fps = 15;
-  bool _loopGif = true;
+  bool _loop = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoDetect();
+  }
+
+  /// 根据文件扩展名自动识别输入类型和输入格式
+  void _autoDetect() {
+    final path = widget.initialFilePath;
+    final dot = path.lastIndexOf('.');
+    if (dot < 0) return;
+    final ext = path.substring(dot + 1).toLowerCase();
+
+    for (final entry in inputFormatsByType.entries) {
+      for (final f in entry.value) {
+        final parts = f.label.replaceAll(' ', '').split('/');
+        final match =
+            parts.any((p) => p.replaceAll('.', '').toLowerCase() == ext) ||
+                f.value == ext;
+        if (match) {
+          _inputType = inputTypeOptions.firstWhere(
+            (o) => o.value == entry.key,
+            orElse: () => FormatOption(label: entry.key, value: entry.key),
+          );
+          _inputFormat = f;
+          return;
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final notifier = ref.read(homeProvider.notifier);
 
     return Scaffold(
@@ -35,7 +67,16 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         actions: [
           TextButton(
             onPressed: () {
-              notifier.startConvert(widget.initialFilePath);
+              if (_outputFormat == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('请先选择输出类型和输出格式')),
+                );
+                return;
+              }
+              notifier.startConvert(
+                widget.initialFilePath,
+                outputExt: _outputFormat!.value,
+              );
               Navigator.pop(context);
             },
             child: const Text('完毕', style: TextStyle(fontSize: 16)),
@@ -45,18 +86,21 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // 文件名显示
           Card(
+            elevation: 0,
+            color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Icon(Icons.insert_drive_file_outlined),
+                  Icon(Icons.insert_drive_file_outlined, color: cs.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      widget.initialFilePath.split('/').last,
+                      widget.initialFilePath.split(Platform.pathSeparator).last,
                       style: const TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -65,147 +109,104 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           ),
           const SizedBox(height: 24),
 
-          // ── 输入/输出选项区 ──
-          _buildOptionRow(
+          _row(
             label: '输入类型',
             value: _inputType?.label,
-            onTap: () => _showPicker(
+            onTap: () => _pick(
               title: '选择输入类型',
               options: inputTypeOptions,
-              onSelect: (opt) => setState(() => _inputType = opt),
+              onSelect: (o) => setState(() {
+                _inputType = o;
+                // 类型变了，之前选的格式作废
+                _inputFormat = null;
+              }),
             ),
           ),
-          _buildOptionRow(
+          _row(
             label: '输入格式',
             value: _inputFormat?.label,
-            onTap: () => _showPicker(
-              title: '选择输入格式',
-              options: inputFormatOptions,
-              onSelect: (opt) => setState(() => _inputFormat = opt),
-            ),
+            enabled: _inputType != null,
+            hint: _inputType == null ? '请先选择输入类型' : null,
+            onTap: () {
+              final list = inputFormatsByType[_inputType!.value] ?? const [];
+              _pick(
+                title: '选择输入格式',
+                options: list,
+                onSelect: (o) => setState(() => _inputFormat = o),
+              );
+            },
           ),
-          _buildOptionRow(
+          _row(
             label: '输出类型',
             value: _outputType?.label,
-            onTap: () => _showPicker(
+            onTap: () => _pick(
               title: '选择输出类型',
               options: outputTypeOptions,
-              onSelect: (opt) => setState(() => _outputType = opt),
+              onSelect: (o) => setState(() {
+                _outputType = o;
+                _outputFormat = null;
+              }),
             ),
           ),
-          _buildOptionRow(
+          _row(
             label: '输出格式',
             value: _outputFormat?.label,
-            onTap: () => _showPicker(
-              title: '选择输出格式',
-              options: outputFormatOptions,
-              onSelect: (opt) => setState(() => _outputFormat = opt),
-            ),
+            enabled: _outputType != null,
+            hint: _outputType == null ? '请先选择输出类型' : null,
+            onTap: () {
+              final list = outputFormatsByType[_outputType!.value] ?? const [];
+              _pick(
+                title: '选择输出格式',
+                options: list,
+                onSelect: (o) => setState(() => _outputFormat = o),
+              );
+            },
           ),
 
-          const SizedBox(height: 24),
-          const Divider(),
           const SizedBox(height: 16),
-
-          // ── 高级选项区 ──
+          const Divider(),
           InkWell(
             onTap: () => setState(() => _showAdvanced = !_showAdvanced),
-            child: Row(
-              children: [
-                Icon(_showAdvanced ? Icons.expand_less : Icons.expand_more),
-                const SizedBox(width: 8),
-                const Text('高级选项', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                children: [
+                  Icon(_showAdvanced ? Icons.expand_less : Icons.expand_more),
+                  const SizedBox(width: 8),
+                  const Text('高级选项',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ],
+              ),
             ),
           ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox(height: 0),
-            secondChild: _buildAdvancedContent(),
-            crossFadeState: _showAdvanced ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 200),
-          ),
+          if (_showAdvanced) _advanced(),
         ],
       ),
     );
   }
 
-  // 选项行
-  Widget _buildOptionRow({
-    required String label,
-    required String? value,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 16)),
-            Row(
-              children: [
-                Text(
-                  value ?? '请选择',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: value == null ? Colors.grey : Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, color: Colors.grey),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 高级选项内容
-  Widget _buildAdvancedContent() {
-    // 判断当前场景
-    final isMcConvert = _inputType?.value == 'mc_java' || _inputType?.value == 'mc_bedrock' ||
+  Widget _advanced() {
+    final isMc = _inputType?.value.startsWith('mc') == true ||
         _outputType?.value == 'mc';
-    final isGifConvert = _outputFormat?.value == 'gif';
-    final isMidiConvert = _outputFormat?.value == 'midi';
+    final isGif = _outputFormat?.value == 'gif';
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: Column(
-        children: [
-          // MC 互转
-          if (isMcConvert) ...[
-            _buildMcSection(),
-            const SizedBox(height: 16),
-          ],
-
-          // GIF 转换
-          if (isGifConvert) ...[
-            _buildGifSection(),
-            const SizedBox(height: 16),
-          ],
-
-          // MIDI 转换
-          if (isMidiConvert) ...[
-            _buildMidiSection(),
-            const SizedBox(height: 16),
-          ],
-
-          // 默认提示
-          if (!isMcConvert && !isGifConvert && !isMidiConvert)
-            const Text(
-              '选择特定转换类型后，这里会显示对应参数',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-        ],
-      ),
+    return Column(
+      children: [
+        if (isMc) _mcCard(),
+        if (isGif) _gifCard(),
+        if (!isMc && !isGif)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text('选择「我的世界」或 GIF 输出后，这里会出现对应参数',
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
+          ),
+      ],
     );
   }
 
-  // MC 版本选择
-  Widget _buildMcSection() {
+  Widget _mcCard() {
     return Card(
+      margin: const EdgeInsets.only(top: 8),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -216,30 +217,16 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             Row(
               children: [
                 Expanded(
-                  child: _buildVersionDropdown(
-                    label: '源版本',
-                    value: _mcSourceVersion,
-                    onTap: () => _showVersionPicker(
-                      title: '选择源版本',
-                      current: _mcSourceVersion,
-                      onSelect: (v) => setState(() => _mcSourceVersion = v),
-                    ),
-                  ),
+                  child: _versionBox(
+                      '源版本', _mcSource, (v) => setState(() => _mcSource = v)),
                 ),
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 8),
                   child: Text('→'),
                 ),
                 Expanded(
-                  child: _buildVersionDropdown(
-                    label: '目标版本',
-                    value: _mcTargetVersion,
-                    onTap: () => _showVersionPicker(
-                      title: '选择目标版本',
-                      current: _mcTargetVersion,
-                      onSelect: (v) => setState(() => _mcTargetVersion = v),
-                    ),
-                  ),
+                  child: _versionBox(
+                      '目标版本', _mcTarget, (v) => setState(() => _mcTarget = v)),
                 ),
               ],
             ),
@@ -249,22 +236,23 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     );
   }
 
-  Widget _buildVersionDropdown({
-    required String label,
-    required String? value,
-    required VoidCallback onTap,
-  }) {
+  Widget _versionBox(String label, String? value, ValueChanged<String> onPick) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         InkWell(
-          onTap: onTap,
+          onTap: () => _pick(
+            title: '选择$label',
+            options:
+                mcVersions.map((v) => FormatOption(label: v, value: v)).toList(),
+            onSelect: (o) => onPick(o.value),
+          ),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -280,22 +268,19 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     );
   }
 
-  // GIF 选项
-  Widget _buildGifSection() {
+  Widget _gifCard() {
     return Card(
+      margin: const EdgeInsets.only(top: 8),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('GIF 设置', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('FPS'),
-                Text('${_fps.toInt()}'),
-              ],
+              children: [const Text('帧率 FPS'), Text('${_fps.toInt()}')],
             ),
             Slider(
               value: _fps,
@@ -305,10 +290,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               onChanged: (v) => setState(() => _fps = v),
             ),
             SwitchListTile(
+              contentPadding: EdgeInsets.zero,
               title: const Text('循环播放'),
-              value: _loopGif,
-              onChanged: (v) => setState(() => _loopGif = v),
-              dense: true,
+              value: _loop,
+              onChanged: (v) => setState(() => _loop = v),
             ),
           ],
         ),
@@ -316,88 +301,79 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     );
   }
 
-  // MIDI 选项
-  Widget _buildMidiSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('人声处理', style: TextStyle(fontWeight: FontWeight.bold)),
-            RadioListTile<bool>(
-              title: const Text('去人声'),
-              value: true,
-              groupValue: _isMidi,
-              onChanged: (v) => setState(() => _isMidi = v!),
-              dense: true,
-            ),
-            RadioListTile<bool>(
-              title: const Text('带人声'),
-              value: false,
-              groupValue: _isMidi,
-              onChanged: (v) => setState(() => _isMidi = v!),
-              dense: true,
-            ),
-          ],
+  Widget _row({
+    required String label,
+    required String? value,
+    required VoidCallback onTap,
+    bool enabled = true,
+    String? hint,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.45,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 16)),
+              Row(
+                children: [
+                  Text(
+                    value ?? hint ?? '请选择',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: value == null ? cs.onSurfaceVariant : cs.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right, color: cs.outline),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── 界面 3：底部选择弹窗 ──
-  void _showPicker({
+  void _pick({
     required String title,
     required List<FormatOption> options,
     required void Function(FormatOption) onSelect,
   }) {
+    if (options.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('该类型下暂时没有可用格式')));
+      return;
+    }
     showModalBottomSheet(
       context: context,
-      builder: (context) => ListView(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-          for (final opt in options)
-            ListTile(
-              title: Text(opt.label),
-              subtitle: opt.category != null ? Text(opt.category!) : null,
-              onTap: () {
-                Navigator.pop(context);
-                onSelect(opt);
-              },
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Text(title,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  void _showVersionPicker({
-    required String title,
-    required String? current,
-    required void Function(String) onSelect,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => ListView(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-          for (final v in mcVersions)
-            ListTile(
-              title: Text(v),
-              trailing: v == current ? const Icon(Icons.check, color: Colors.teal) : null,
-              onTap: () {
-                Navigator.pop(context);
-                onSelect(v);
-              },
-            ),
-          const SizedBox(height: 16),
-        ],
+            for (final o in options)
+              ListTile(
+                title: Text(o.label),
+                subtitle: o.category != null ? Text(o.category!) : null,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onSelect(o);
+                },
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }

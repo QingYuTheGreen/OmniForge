@@ -18,6 +18,14 @@ dependencies:
   open_filex: ^4.4.0
   window_manager: ^0.3.8
   flutter_riverpod: ^2.5.1
+  # 动态取色（Material You，仅 Android 12+ 生效，其他平台自动返回 null）
+  dynamic_color: ^1.7.0
+  # 读取安卓版本（SDK_INT），判断是否支持动态取色
+  device_info_plus: ^10.1.0
+  # 公共目录写入权限申请（MANAGE_EXTERNAL_STORAGE）
+  permission_handler: ^11.3.0
+  # 接收其他应用分享/打开的文件（Android + iOS）
+  receive_sharing_intent: ^1.8.1
 
 dev_dependencies:
   flutter_test:

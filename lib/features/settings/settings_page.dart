@@ -1,69 +1,359 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../utils/output_paths.dart';
 import 'settings_provider.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  bool _checking = true;
+
+  /// 安卓版本号（sdkInt），非安卓为 0
+  int _sdkInt = 0;
+  String _deviceLabel = '';
+  bool _hasStorageAccess = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlatform();
+  }
+
+  Future<void> _loadPlatform() async {
+    if (!Platform.isAndroid) {
+      if (mounted) setState(() => _checking = false);
+      return;
+    }
+    try {
+      final info = await DeviceInfoPlugin().androidInfo;
+      final granted = await Permission.manageExternalStorage.isGranted;
+      if (!mounted) return;
+      setState(() {
+        _sdkInt = info.version.sdkInt;
+        _deviceLabel = 'Android ${info.version.release}（API ${info.version.sdkInt}）'
+            ' · ${info.brand} ${info.model}';
+        _hasStorageAccess = granted;
+        _checking = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  bool get _dynamicSupported => Platform.isAndroid && _sdkInt >= 31;
+
+  Future<void> _requestStorage() async {
+    final status = await Permission.manageExternalStorage.request();
+    if (!mounted) return;
+    setState(() => _hasStorageAccess = status.isGranted);
+    if (!status.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未获得存储权限，输出文件会存到应用私有目录')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('设置'), centerTitle: true),
+      appBar: AppBar(title: const Text('主题与外观'), centerTitle: true),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('外观', style: TextStyle(color: Colors.grey, fontSize: 12)),
-          ),
-
-          // 主题模式
-          ListTile(
-            leading: const Icon(Icons.brightness_6_outlined),
-            title: const Text('主题模式'),
-            subtitle: Text(_themeModeLabel(state.themeMode)),
-            onTap: () => _showThemePicker(context, notifier, state.themeMode),
-          ),
-
-          // 动态取色
-          SwitchListTile(
-            secondary: const Icon(Icons.wallpaper_outlined),
-            title: const Text('动态取色'),
-            subtitle: const Text('Android 12+ 使用壁纸颜色'),
-            value: state.dynamicColor,
-            onChanged: (v) => notifier.setDynamicColor(v),
-          ),
-
-          const Divider(),
-
-          // 自定义主色
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('主色调', style: TextStyle(color: Colors.grey, fontSize: 12)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 16,
+          // ── 外观模式 ──
+          _title('外观模式'),
+          _card(cs, [
+            const Text('选择应用的明暗外观'),
+            const SizedBox(height: 12),
+            Row(
               children: [
-                for (final color in presetColors)
-                  _ColorCircle(
-                    color: color,
-                    selected: state.seedColor == color,
-                    onTap: () => notifier.setSeedColor(color),
+                for (final mode in ThemeMode.values) ...[
+                  Expanded(
+                    child: _toggle(
+                      cs,
+                      label: _themeLabel(mode),
+                      selected: state.themeMode == mode,
+                      onTap: () => notifier.setThemeMode(mode),
+                    ),
                   ),
+                  if (mode != ThemeMode.values.last) const SizedBox(width: 10),
+                ],
               ],
             ),
-          ),
+          ]),
+          const SizedBox(height: 20),
+
+          // ── 文件名显示 ──
+          _title('文件名显示'),
+          _card(cs, [
+            const Text('文件名过长时的展示方式'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _toggle(
+                    cs,
+                    label: '跑马灯滚动',
+                    selected: state.fileNameDisplay == FileNameDisplay.marquee,
+                    onTap: () =>
+                        notifier.setFileNameDisplay(FileNameDisplay.marquee),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _toggle(
+                    cs,
+                    label: '多行显示',
+                    selected: state.fileNameDisplay == FileNameDisplay.multiline,
+                    onTap: () =>
+                        notifier.setFileNameDisplay(FileNameDisplay.multiline),
+                  ),
+                ),
+              ],
+            ),
+          ]),
+          const SizedBox(height: 20),
+
+          // ── 主题色 ──
+          _card(cs, [
+            Row(
+              children: [
+                Icon(Icons.palette_outlined, color: cs.primary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text('主题色',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                ),
+                const Icon(Icons.expand_less),
+              ],
+            ),
+            const Divider(height: 24),
+
+            if (_checking)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: LinearProgressIndicator(),
+              )
+            else if (_dynamicSupported)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('动态色彩'),
+                subtitle: Text('从系统壁纸自动取色（$_deviceLabel）'),
+                value: state.dynamicColor,
+                onChanged: notifier.setDynamicColor,
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  Platform.isAndroid
+                      ? '当前设备 $_deviceLabel，动态取色需要 Android 12（API 31）及以上'
+                      : '动态取色仅支持 Android 12+，当前平台使用下方固定主题色',
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                ),
+              ),
+
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('主题颜色',
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                for (final c in presetColors)
+                  _dot(c, state.seedColor == c, () => notifier.setSeedColor(c)),
+              ],
+            ),
+          ]),
+          const SizedBox(height: 20),
+
+          // ── 桌面图标 ──
+          _card(cs, [
+            Row(
+              children: [
+                Icon(Icons.star_outline, color: cs.primary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text('桌面图标',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                ),
+                const Icon(Icons.expand_less),
+              ],
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                _icon(cs, '经典图标', state.appIcon == AppIcon.classic,
+                    () => notifier.setAppIcon(AppIcon.classic)),
+                const SizedBox(width: 20),
+                _icon(cs, '新图标', state.appIcon == AppIcon.newOne,
+                    () => notifier.setAppIcon(AppIcon.newOne)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (Platform.isAndroid)
+              Text('Android 12+ 立即生效；部分设备需回到桌面或重启启动器后查看。',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+          ]),
+          const SizedBox(height: 20),
+
+          // ── 输出目录 ──
+          _card(cs, [
+            Row(
+              children: [
+                Icon(Icons.folder_outlined, color: cs.primary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text('输出目录',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SelectableText(OutputPaths.description,
+                style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+            if (Platform.isAndroid) ...[
+              const SizedBox(height: 8),
+              if (_hasStorageAccess)
+                Row(children: [
+                  const Icon(Icons.check_circle_outline,
+                      size: 16, color: Colors.green),
+                  const SizedBox(width: 6),
+                  const Text('已获得存储权限', style: TextStyle(fontSize: 12)),
+                ])
+              else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: _requestStorage,
+                    child: const Text('授予存储权限（否则只存应用私有目录）'),
+                  ),
+                ),
+            ],
+          ]),
         ],
       ),
     );
   }
 
-  String _themeModeLabel(ThemeMode mode) {
+  Widget _title(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Text(text,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary)),
+      );
+
+  Widget _card(ColorScheme cs, List<Widget> children) => Card(
+        elevation: 0,
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
+      );
+
+  Widget _toggle(ColorScheme cs,
+      {required String label,
+      required bool selected,
+      required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        decoration: BoxDecoration(
+          color: selected
+              ? cs.primaryContainer
+              : cs.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? cs.primary : cs.outlineVariant,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Center(
+          child: Text(label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                color: selected ? cs.onPrimaryContainer : cs.onSurface,
+              )),
+        ),
+      ),
+    );
+  }
+
+  Widget _dot(Color color, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: selected ? Border.all(color: Colors.white, width: 3) : null,
+          boxShadow: selected
+              ? [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6, spread: 1)]
+              : null,
+        ),
+        child: selected
+            ? const Icon(Icons.check, color: Colors.white, size: 20)
+            : null,
+      ),
+    );
+  }
+
+  Widget _icon(ColorScheme cs, String label, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: selected ? cs.primary : cs.outlineVariant,
+                width: selected ? 3 : 1,
+              ),
+              color: cs.surface,
+            ),
+            child: Icon(Icons.extension_outlined, size: 30, color: cs.primary),
+          ),
+          const SizedBox(height: 6),
+          Text(label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              )),
+        ],
+      ),
+    );
+  }
+
+  String _themeLabel(ThemeMode mode) {
     switch (mode) {
       case ThemeMode.system:
         return '跟随系统';
@@ -72,61 +362,5 @@ class SettingsPage extends ConsumerWidget {
       case ThemeMode.dark:
         return '深色';
     }
-  }
-
-  void _showThemePicker(BuildContext context, SettingsNotifier notifier, ThemeMode current) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => ListView(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('选择主题模式', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-          for (final mode in ThemeMode.values)
-            ListTile(
-              title: Text(_themeModeLabel(mode)),
-              trailing: mode == current ? const Icon(Icons.check, color: Colors.teal) : null,
-              onTap: () {
-                notifier.setThemeMode(mode);
-                Navigator.pop(context);
-              },
-            ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _ColorCircle extends StatelessWidget {
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ColorCircle({
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: selected ? Border.all(color: Colors.black, width: 3) : null,
-          boxShadow: selected
-              ? [BoxShadow(color: color.withOpacity(0.4), blurRadius: 8, spreadRadius: 2)]
-              : null,
-        ),
-        child: selected ? const Icon(Icons.check, color: Colors.white) : null,
-      ),
-    );
   }
 }
