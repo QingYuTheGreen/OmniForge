@@ -47,7 +47,15 @@ jobs:
           cache: true
 
       - name: 安装依赖
-        run: flutter pub get
+        shell: bash
+        run: |
+          # gitcode/镜像偶发断流（RPC failed / early EOF），失败自动重试
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
 
       - name: 构建 APK（按 ABI 拆分：arm64-v8a / armeabi-v7a / x86_64）
         run: flutter build apk --release --split-per-abi
@@ -98,7 +106,15 @@ jobs:
         run: git config --global core.longpaths true
 
       - name: 安装依赖
-        run: flutter pub get
+        shell: bash
+        run: |
+          # gitcode/镜像偶发断流（RPC failed / early EOF），失败自动重试
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
 
       - name: 构建 Windows x64
         run: flutter build windows --release
@@ -141,7 +157,15 @@ jobs:
         run: git config --global core.longpaths true
 
       - name: 安装依赖
-        run: flutter pub get
+        shell: bash
+        run: |
+          # gitcode/镜像偶发断流（RPC failed / early EOF），失败自动重试
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
 
       - name: 构建 Windows ARM64
         run: flutter build windows --release
@@ -181,7 +205,15 @@ jobs:
         run: flutter config --enable-macos-desktop
 
       - name: 安装依赖
-        run: flutter pub get
+        shell: bash
+        run: |
+          # gitcode/镜像偶发断流（RPC failed / early EOF），失败自动重试
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
 
       - name: 构建 macOS Universal（x64 + ARM64）
         run: |
@@ -231,7 +263,15 @@ jobs:
         run: flutter config --enable-linux-desktop
 
       - name: 安装依赖
-        run: flutter pub get
+        shell: bash
+        run: |
+          # gitcode/镜像偶发断流（RPC failed / early EOF），失败自动重试
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
 
       - name: 构建 Linux x64
         run: flutter build linux --release
@@ -273,7 +313,15 @@ jobs:
         run: flutter config --enable-linux-desktop
 
       - name: 安装依赖
-        run: flutter pub get
+        shell: bash
+        run: |
+          # gitcode/镜像偶发断流（RPC failed / early EOF），失败自动重试
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
 
       - name: 构建 Linux ARM64
         run: flutter build linux --release
@@ -309,7 +357,15 @@ jobs:
           cache: true
 
       - name: 安装依赖
-        run: flutter pub get
+        shell: bash
+        run: |
+          # gitcode/镜像偶发断流（RPC failed / early EOF），失败自动重试
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
 
       - name: 生成 Xcode 配置（供 CocoaPods 读取）
         run: flutter build ios --release --config-only --no-codesign
