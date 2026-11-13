@@ -3,8 +3,10 @@ import 'dart:typed_data';
 
 /// 识别结果
 class DetectedFormat {
-  /// 类型键，与 home_provider 的 inputTypeOptions 对齐：
-  /// image / audio / video / document / archive / mc_java / mc_bedrock / unknown
+  /// 类型键，与 formats.yaml 的 categories 对齐（19 类）：
+  /// image / audio / video / ebook / document / slides / spreadsheet / font /
+  /// palette / model3d / texture / mesh / hash / embroidery / gps / subtitle /
+  /// playlist / archive / minecraft，未识别为 unknown
   final String typeKey;
 
   /// 类型中文名
@@ -65,7 +67,7 @@ class FileTypeDetector {
   /// 扩展名 → 结果
   static DetectedFormat fromExtension(String ext) {
     final e = ext.toLowerCase();
-    final type = _extType[e];
+    final type = _compoundType[e] ?? _extType[e];
     if (type == null) {
       return DetectedFormat(
         typeKey: 'unknown',
@@ -80,7 +82,16 @@ class FileTypeDetector {
     );
   }
 
+  /// 复合扩展名白名单：这些格式的点号后两段才算完整扩展名
+  static const List<String> _compoundExts = [
+    'tar.gz', 'tar.bz2', 'tar.xz', 'geo.json',
+  ];
+
   static String _extension(String path) {
+    final lower = path.toLowerCase();
+    for (final c in _compoundExts) {
+      if (lower.endsWith('.$c')) return c;
+    }
     final dot = path.lastIndexOf('.');
     if (dot < 0 || dot == path.length - 1) return '';
     return path.substring(dot + 1).toLowerCase();
@@ -138,9 +149,8 @@ class FileTypeDetector {
     }
     // ZIP 系（含 MC 的 mcworld/mcpack/mcaddon，本质都是 zip）
     if (startsWith([0x50, 0x4B, 0x03, 0x04])) {
-      final mcType = _extType[ext];
-      if (mcType == 'mc_bedrock' || mcType == 'mc_java') {
-        return _r(mcType!, ext, ext);
+      if (_extType[ext] == 'minecraft') {
+        return _r('minecraft', ext, ext);
       }
       return _r('archive', ext.isEmpty ? 'zip' : ext, ext);
     }
@@ -178,9 +188,8 @@ class FileTypeDetector {
 
   static DetectedFormat _r(String type, String resolvedExt, String rawExt) {
     // 扩展名和真实内容一致时保留扩展名，否则以魔数判断为准
-    final format = rawExt.isNotEmpty && _extType[rawExt] == type
-        ? rawExt
-        : resolvedExt;
+    final rawType = _compoundType[rawExt] ?? _extType[rawExt];
+    final format = rawExt.isNotEmpty && rawType == type ? rawExt : resolvedExt;
     return DetectedFormat(
       typeKey: type,
       typeLabel: _typeLabels[type] ?? '未知类型',
@@ -192,38 +201,95 @@ class FileTypeDetector {
   // ── 扩展名 → 类型键 ──
   static const Map<String, String> _extType = {
     // 图像
-    'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image',
-    'bmp': 'image', 'webp': 'image', 'svg': 'image', 'ico': 'image',
+    'jpg': 'image', 'jpeg': 'image', 'jpe': 'image', 'jfif': 'image',
+    'png': 'image', 'apng': 'image', 'gif': 'image', 'bmp': 'image',
+    'dib': 'image', 'webp': 'image', 'svg': 'image', 'ico': 'image',
     'heic': 'image', 'heif': 'image', 'avif': 'image',
+    'tiff': 'image', 'tif': 'image', 'hdr': 'image', 'exr': 'image',
     // 音频
-    'mp3': 'audio', 'wav': 'audio', 'flac': 'audio', 'aac': 'audio',
-    'ogg': 'audio', 'm4a': 'audio', 'mid': 'audio', 'midi': 'audio',
-    'wma': 'audio', 'amr': 'audio',
+    'mp3': 'audio', 'wav': 'audio', 'wave': 'audio', 'flac': 'audio',
+    'aac': 'audio', 'm4a': 'audio', 'ogg': 'audio', 'oga': 'audio',
+    'opus': 'audio', 'mid': 'audio', 'midi': 'audio', 'wma': 'audio',
+    'amr': 'audio', 'ncm': 'audio', 'kgm': 'audio', 'kgma': 'audio',
+    'qmc': 'audio', 'qmc0': 'audio', 'qmc3': 'audio', 'qmcflac': 'audio',
+    'qmcogg': 'audio',
     // 视频
-    'mp4': 'video', 'avi': 'video', 'mkv': 'video', 'mov': 'video',
-    'webm': 'video', 'flv': 'video', 'wmv': 'video', 'm4v': 'video',
+    'mp4': 'video', 'm4v': 'video', 'avi': 'video', 'mkv': 'video',
+    'mov': 'video', 'webm': 'video', 'flv': 'video', 'wmv': 'video',
     '3gp': 'video', 'ts': 'video',
+    // 电子书
+    'epub': 'ebook', 'mobi': 'ebook', 'prc': 'ebook', 'azw': 'ebook',
+    'azw3': 'ebook',
     // 文档
-    'pdf': 'document', 'doc': 'document', 'docx': 'document',
-    'txt': 'document', 'md': 'document', 'epub': 'document',
-    'rtf': 'document', 'xls': 'document', 'xlsx': 'document',
-    'ppt': 'document', 'pptx': 'document', 'csv': 'document',
+    'doc': 'document', 'docx': 'document', 'md': 'document',
+    'markdown': 'document', 'rtf': 'document', 'htm': 'document',
+    // 幻灯片
+    'ppt': 'slides', 'pptx': 'slides', 'odp': 'slides',
+    // 表格
+    'xls': 'spreadsheet', 'xlsx': 'spreadsheet', 'csv': 'spreadsheet',
+    'tsv': 'spreadsheet',
+    // 字体
+    'ttf': 'font', 'otf': 'font', 'woff': 'font', 'woff2': 'font',
+    'ufo': 'font',
+    // 调色板
+    'ase': 'palette', 'aco': 'palette', 'gpl': 'palette',
+    // 3D 模型
+    'obj': 'model3d', 'fbx': 'model3d', 'stl': 'model3d',
+    'gltf': 'model3d', 'glb': 'model3d',
+    // 纹理
+    'dds': 'texture', 'astc': 'texture', 'ktx': 'texture',
+    'ktx2': 'texture', 'xnb': 'texture', 'tga': 'texture',
+    // 网格
+    'ply': 'mesh', 'off': 'mesh',
+    // 哈希（结果文件）
+    'md5': 'hash', 'sha': 'hash', 'sha1': 'hash', 'sha256': 'hash',
+    'sha512': 'hash', 'crc': 'hash', 'b64': 'hash', 'base64': 'hash',
+    // 绣花
+    'pes': 'embroidery', 'dst': 'embroidery', 'jef': 'embroidery',
+    // GPS
+    'gpx': 'gps', 'kml': 'gps', 'tcx': 'gps', 'geojson': 'gps',
+    // 字幕
+    'srt': 'subtitle', 'ass': 'subtitle', 'ssa': 'subtitle',
+    'vtt': 'subtitle', 'lrc': 'subtitle',
+    // 播放列表
+    'm3u': 'playlist', 'm3u8': 'playlist', 'cue': 'playlist',
     // 压缩包
     'zip': 'archive', 'rar': 'archive', '7z': 'archive',
-    'tar': 'archive', 'gz': 'archive', 'bz2': 'archive',
+    'tar': 'archive', 'gz': 'archive', 'bz2': 'archive', 'xz': 'archive',
+    // 文本类兜底（PDF / TXT / JSON / XML / HTML 已在对应分类）
+    'pdf': 'document', 'txt': 'document', 'json': 'spreadsheet',
+    'xml': 'spreadsheet', 'html': 'document',
     // 我的世界
-    'mcworld': 'mc_bedrock', 'mcaddon': 'mc_bedrock', 'mcpack': 'mc_bedrock',
-    'schematic': 'mc_java', 'schem': 'mc_java', 'nbt': 'mc_java',
-    'mcfunction': 'mc_java', 'dat': 'mc_java', 'mca': 'mc_java',
+    'mcworld': 'minecraft', 'mcpack': 'minecraft', 'mcaddon': 'minecraft',
+    'schematic': 'minecraft', 'schem': 'minecraft', 'nbt': 'minecraft',
+    'mcfunction': 'minecraft', 'mca': 'minecraft',
+  };
+
+  /// 复合扩展名 → 类型（_extension 已返回 tar.gz 这种两段形式）
+  static const Map<String, String> _compoundType = {
+    'tar.gz': 'archive', 'tar.bz2': 'archive', 'tar.xz': 'archive',
+    'geo.json': 'model3d',
   };
 
   static const Map<String, String> _typeLabels = {
     'image': '图像',
     'audio': '音频',
     'video': '视频',
+    'ebook': '电子书',
     'document': '文档',
+    'slides': '幻灯片',
+    'spreadsheet': '表格',
+    'font': '字体',
+    'palette': '调色板',
+    'model3d': '3D 模型',
+    'texture': '纹理',
+    'mesh': '网格',
+    'hash': '哈希计算',
+    'embroidery': '绣花',
+    'gps': 'GPS',
+    'subtitle': '字幕',
+    'playlist': '播放列表',
     'archive': '压缩包',
-    'mc_java': '我的世界 JAVA 存档',
-    'mc_bedrock': '我的世界基岩版存档',
+    'minecraft': '我的世界专区',
   };
 }

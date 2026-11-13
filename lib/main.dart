@@ -7,8 +7,12 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'features/home/home_page.dart';
 import 'features/home/home_provider.dart';
 import 'features/settings/settings_provider.dart';
+import 'registry/registry_manager.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // 先把 assets/formats.yaml 全量读进注册中心，UI 的类型/格式级联全部来自这里
+  await RegistryManager().initialize();
   runApp(const ProviderScope(child: OmniForgeApp()));
 }
 

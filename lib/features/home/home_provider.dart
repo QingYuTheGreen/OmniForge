@@ -4,6 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/output_paths.dart';
 import '../../utils/file_type_detector.dart';
 
+// FormatOption / 格式目录统一定义在 registry/format_catalog.dart，这里转出，
+// 让原本 import home_provider 的地方继续能用。
+export '../../registry/format_catalog.dart'
+    show FormatOption, FormatCatalog, formatCatalogProvider, categoryIcon;
+
 // ── 文件状态 ──
 enum FileStatus { processing, completed, failed }
 
@@ -51,14 +56,6 @@ class FileItem {
       detectedFormat: detectedFormat ?? this.detectedFormat,
     );
   }
-}
-
-// ── 选项模型 ──
-class FormatOption {
-  final String label;
-  final String value;
-  final String? category;
-  const FormatOption({required this.label, required this.value, this.category});
 }
 
 /// 其他应用分享/打开进来的文件路径：main 写入，HomePage 监听后打开转换配置页
@@ -212,115 +209,3 @@ class HomeNotifier extends StateNotifier<HomeState> {
 final homeProvider = StateNotifierProvider<HomeNotifier, HomeState>((ref) {
   return HomeNotifier();
 });
-
-// ═══════════════════════════════════════
-// 类型 → 格式 级联数据
-// ═══════════════════════════════════════
-
-final inputTypeOptions = [
-  const FormatOption(label: '图像', value: 'image'),
-  const FormatOption(label: '音频', value: 'audio'),
-  const FormatOption(label: '视频', value: 'video'),
-  const FormatOption(label: '文档', value: 'document'),
-  const FormatOption(label: '压缩包', value: 'archive'),
-  const FormatOption(label: '我的世界 JAVA 存档', value: 'mc_java', category: '我的世界'),
-  const FormatOption(label: '我的世界基岩版存档', value: 'mc_bedrock', category: '我的世界'),
-];
-
-final outputTypeOptions = [
-  const FormatOption(label: '图像', value: 'image'),
-  const FormatOption(label: '音频', value: 'audio'),
-  const FormatOption(label: '视频', value: 'video'),
-  const FormatOption(label: '文档', value: 'document'),
-  const FormatOption(label: '压缩包', value: 'archive'),
-];
-
-final Map<String, List<FormatOption>> inputFormatsByType = {
-  'image': const [
-    FormatOption(label: '.jpg / .jpeg', value: 'jpg'),
-    FormatOption(label: '.png', value: 'png'),
-    FormatOption(label: '.gif', value: 'gif'),
-    FormatOption(label: '.bmp', value: 'bmp'),
-    FormatOption(label: '.webp', value: 'webp'),
-    FormatOption(label: '.svg', value: 'svg'),
-    FormatOption(label: '.ico', value: 'ico'),
-    FormatOption(label: '.heic', value: 'heic'),
-  ],
-  'audio': const [
-    FormatOption(label: '.mp3', value: 'mp3'),
-    FormatOption(label: '.wav', value: 'wav'),
-    FormatOption(label: '.flac', value: 'flac'),
-    FormatOption(label: '.aac', value: 'aac'),
-    FormatOption(label: '.ogg', value: 'ogg'),
-    FormatOption(label: '.m4a', value: 'm4a'),
-    FormatOption(label: '.mid / .midi', value: 'midi'),
-  ],
-  'video': const [
-    FormatOption(label: '.mp4', value: 'mp4'),
-    FormatOption(label: '.avi', value: 'avi'),
-    FormatOption(label: '.mkv', value: 'mkv'),
-    FormatOption(label: '.mov', value: 'mov'),
-    FormatOption(label: '.webm', value: 'webm'),
-    FormatOption(label: '.flv', value: 'flv'),
-    FormatOption(label: '.gif', value: 'gif'),
-  ],
-  'document': const [
-    FormatOption(label: '.pdf', value: 'pdf'),
-    FormatOption(label: '.doc / .docx', value: 'docx'),
-    FormatOption(label: '.txt', value: 'txt'),
-    FormatOption(label: '.md', value: 'md'),
-    FormatOption(label: '.epub', value: 'epub'),
-  ],
-  'archive': const [
-    FormatOption(label: '.zip', value: 'zip'),
-    FormatOption(label: '.rar', value: 'rar'),
-    FormatOption(label: '.7z', value: '7z'),
-    FormatOption(label: '.tar', value: 'tar'),
-    FormatOption(label: '.gz', value: 'gz'),
-  ],
-  'mc_java': const [
-    FormatOption(label: '.mcworld', value: 'mcworld'),
-    FormatOption(label: '.zip', value: 'zip'),
-  ],
-  'mc_bedrock': const [
-    FormatOption(label: '.mcworld', value: 'mcworld'),
-    FormatOption(label: '.mcaddon', value: 'mcaddon'),
-    FormatOption(label: '.mcpack', value: 'mcpack'),
-  ],
-};
-
-final Map<String, List<FormatOption>> outputFormatsByType = {
-  'image': const [
-    FormatOption(label: '.png', value: 'png'),
-    FormatOption(label: '.jpg', value: 'jpg'),
-    FormatOption(label: '.gif', value: 'gif'),
-    FormatOption(label: '.bmp', value: 'bmp'),
-    FormatOption(label: '.webp', value: 'webp'),
-    FormatOption(label: '.ico', value: 'ico'),
-  ],
-  'audio': const [
-    FormatOption(label: '.mp3', value: 'mp3'),
-    FormatOption(label: '.wav', value: 'wav'),
-    FormatOption(label: '.flac', value: 'flac'),
-    FormatOption(label: '.ogg', value: 'ogg'),
-    FormatOption(label: '.mid', value: 'midi'),
-  ],
-  'video': const [
-    FormatOption(label: '.mp4', value: 'mp4'),
-    FormatOption(label: '.mkv', value: 'mkv'),
-    FormatOption(label: '.webm', value: 'webm'),
-    FormatOption(label: '.mov', value: 'mov'),
-    FormatOption(label: '.gif', value: 'gif'),
-  ],
-  'document': const [
-    FormatOption(label: '.pdf', value: 'pdf'),
-    FormatOption(label: '.txt', value: 'txt'),
-    FormatOption(label: '.docx', value: 'docx'),
-    FormatOption(label: '.epub', value: 'epub'),
-  ],
-  'archive': const [
-    FormatOption(label: '.zip', value: 'zip'),
-    FormatOption(label: '.7z', value: '7z'),
-    FormatOption(label: '.tar.gz', value: 'tar.gz'),
-  ],
-};

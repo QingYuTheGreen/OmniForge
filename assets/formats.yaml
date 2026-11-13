@@ -1,46 +1,133 @@
+# ═══════════════════════════════════════════════════════════
+# OmniForge 格式注册表
+# stage: shell —— 本阶段只登记「格式 / 类型 / 可转关系」，
+# 转换引擎尚未接入，选中任意目标只落到占位实现。
+# ═══════════════════════════════════════════════════════════
+stage: shell
+
+categories:
+  - key: image
+    name: "图像"
+    icon: "photo"
+    order: 1
+  - key: audio
+    name: "音频"
+    icon: "audiotrack"
+    order: 2
+  - key: video
+    name: "视频"
+    icon: "movie"
+    order: 3
+  - key: ebook
+    name: "电子书"
+    icon: "menu_book"
+    order: 4
+  - key: document
+    name: "文档"
+    icon: "description"
+    order: 5
+  - key: slides
+    name: "幻灯片"
+    icon: "slideshow"
+    order: 6
+  - key: spreadsheet
+    name: "表格"
+    icon: "table_chart"
+    order: 7
+  - key: font
+    name: "字体"
+    icon: "font_download"
+    order: 8
+  - key: palette
+    name: "调色板"
+    icon: "palette"
+    order: 9
+  - key: model3d
+    name: "3D 模型"
+    icon: "view_in_ar"
+    order: 10
+  - key: texture
+    name: "纹理"
+    icon: "texture"
+    order: 11
+  - key: mesh
+    name: "网格"
+    icon: "grid_on"
+    order: 12
+  - key: hash
+    name: "哈希计算"
+    icon: "tag"
+    order: 13
+  - key: embroidery
+    name: "绣花"
+    icon: "gestures"
+    order: 14
+  - key: gps
+    name: "GPS"
+    icon: "place"
+    order: 15
+  - key: subtitle
+    name: "字幕"
+    icon: "subtitles"
+    order: 16
+  - key: playlist
+    name: "播放列表"
+    icon: "queue_music"
+    order: 17
+  - key: archive
+    name: "压缩包"
+    icon: "folder_zip"
+    order: 18
+  - key: minecraft
+    name: "我的世界专区"
+    icon: "extension"
+    order: 19
+
 formats:
+
   # ── 1. 图像 ──
-  - id: jpg
+  - id: "jpg"
     name: "JPG 图片"
-    category: image
-    extensions: [".jpg", ".jpeg"]
-    accepts_from: []
-    engines: [image]
-
-  - id: png
+    categories: ["image"]
+    extensions: [".jpg", ".jpeg", ".jpe", ".jfif"]
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
+  - id: "png"
     name: "PNG 图片"
-    category: image
-    extensions: [".png"]
-    accepts_from: []
-    engines: [image]
-
-  - id: webp
+    categories: ["image"]
+    extensions: [".png", ".apng"]
+    accepts_from: ["image", "texture"]
+    engines: ["image"]
+    status: planned
+  - id: "webp"
     name: "WebP 图片"
-    category: image
+    categories: ["image"]
     extensions: [".webp"]
-    accepts_from: []
-    engines: [image]
-
-  - id: heic
+    accepts_from: ["image", "texture"]
+    engines: ["image"]
+    status: planned
+  - id: "heic"
     name: "HEIC 图片"
-    category: image
-    extensions: [".heic"]
-    accepts_from: []
-    engines: [image]
-
-  - id: svg
+    categories: ["image"]
+    extensions: [".heic", ".heif"]
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
+  - id: "svg"
     name: "SVG 矢量图"
-    category: image
+    categories: ["image"]
     extensions: [".svg"]
-    accepts_from: []
-    engines: [image]
-
-  - id: gif
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
+  - id: "gif"
     name: "GIF 动图"
-    category: image
+    categories: ["image"]
     extensions: [".gif"]
-    accepts_from: [video, image]
-    engines: [ffmpeg]
+    accepts_from: ["image", "video"]
+    engines: ["ffmpeg"]
+    status: planned
     params:
       - key: "fps"
         type: "slider"
@@ -53,584 +140,615 @@ formats:
         type: "switch"
         label: "循环播放"
         default: "true"
-
-  - id: bmp
+  - id: "bmp"
     name: "BMP 位图"
-    category: image
-    extensions: [".bmp"]
-    accepts_from: []
-    engines: [image]
-
-  - id: tiff
-    name: "TIFF 图片"
-    category: image
+    categories: ["image"]
+    extensions: [".bmp", ".dib"]
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
+  - id: "tiff"
+    name: "TIFF 图像"
+    categories: ["image"]
     extensions: [".tiff", ".tif"]
-    accepts_from: []
-    engines: [image]
-
-  - id: ico
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
+  - id: "ico"
     name: "ICO 图标"
-    category: image
+    categories: ["image"]
     extensions: [".ico"]
-    accepts_from: [image]
-    engines: [image]
-
-  - id: hdr
-    name: "HDR 高动态范围"
-    category: image
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
+  - id: "hdr"
+    name: "HDR 图像"
+    categories: ["image"]
     extensions: [".hdr"]
-    accepts_from: []
-    engines: [image]
-
-  - id: exr
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
+  - id: "exr"
     name: "EXR 图像"
-    category: image
+    categories: ["image"]
     extensions: [".exr"]
-    accepts_from: []
-    engines: [image]
+    accepts_from: ["image"]
+    engines: ["image"]
+    status: planned
 
   # ── 2. 音频 ──
-  - id: mp3
+  - id: "mp3"
     name: "MP3 音频"
-    category: audio
+    categories: ["audio"]
     extensions: [".mp3"]
-    accepts_from: [video, audio]
-    engines: [ffmpeg]
-
-  - id: wav
+    accepts_from: ["audio", "video"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "wav"
     name: "WAV 音频"
-    category: audio
-    extensions: [".wav"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: flac
-    name: "FLAC 无损音频"
-    category: audio
+    categories: ["audio"]
+    extensions: [".wav", ".wave"]
+    accepts_from: ["audio", "video"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "flac"
+    name: "FLAC 无损"
+    categories: ["audio"]
     extensions: [".flac"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: aac
+    accepts_from: ["audio"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "aac"
     name: "AAC 音频"
-    category: audio
+    categories: ["audio"]
     extensions: [".aac"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: m4a
+    accepts_from: ["audio"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "m4a"
     name: "M4A 音频"
-    category: audio
+    categories: ["audio"]
     extensions: [".m4a"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: ogg
+    accepts_from: ["audio"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "ogg"
     name: "OGG 音频"
-    category: audio
-    extensions: [".ogg"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: midi
-    name: "MIDI 音频"
-    category: audio
+    categories: ["audio"]
+    extensions: [".ogg", ".oga", ".opus"]
+    accepts_from: ["audio"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "midi"
+    name: "MIDI 音序"
+    categories: ["audio"]
     extensions: [".mid", ".midi"]
-    accepts_from: [audio]
-    engines: [midi]
+    accepts_from: ["audio"]
+    engines: ["midi"]
+    status: planned
     params:
       - key: "vocal_mode"
         type: "radio"
         label: "人声处理"
-        options:
-          - { value: "remove", label: "去人声" }
-          - { value: "keep", label: "带人声" }
-
-  - id: ncm
+        options: ["{'value': 'remove', 'label': '去人声'}", "{'value': 'keep', 'label': '带人声'}"]
+  - id: "ncm"
     name: "NCM 网易云"
-    category: audio
+    categories: ["audio"]
     extensions: [".ncm"]
-    accepts_from: []
-    engines: [netease]
-
-  - id: kgm
+    accepts_from: ["audio"]
+    engines: ["netease"]
+    status: planned
+    note: "私有加密格式"
+  - id: "kgm"
     name: "KGM 酷狗"
-    category: audio
-    extensions: [".kgm"]
-    accepts_from: []
-    engines: [kugou]
-
-  - id: qmc
+    categories: ["audio"]
+    extensions: [".kgm", ".kgma"]
+    accepts_from: ["audio"]
+    engines: ["kugou"]
+    status: planned
+    note: "私有加密格式"
+  - id: "qmc"
     name: "QMC QQ音乐"
-    category: audio
-    extensions: [".qmc"]
-    accepts_from: []
-    engines: [qqmusic]
+    categories: ["audio"]
+    extensions: [".qmc", ".qmc0", ".qmc3", ".qmcflac", ".qmcogg"]
+    accepts_from: ["audio"]
+    engines: ["qqmusic"]
+    status: planned
+    note: "私有加密格式"
 
   # ── 3. 视频 ──
-  - id: mp4
+  - id: "mp4"
     name: "MP4 视频"
-    category: video
-    extensions: [".mp4"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: mkv
+    categories: ["video"]
+    extensions: [".mp4", ".m4v"]
+    accepts_from: ["video", "image"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "mkv"
     name: "MKV 视频"
-    category: video
+    categories: ["video"]
     extensions: [".mkv"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: mov
+    accepts_from: ["video"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "mov"
     name: "MOV 视频"
-    category: video
+    categories: ["video"]
     extensions: [".mov"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: avi
+    accepts_from: ["video"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "avi"
     name: "AVI 视频"
-    category: video
+    categories: ["video"]
     extensions: [".avi"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: webm
+    accepts_from: ["video"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "webm"
     name: "WebM 视频"
-    category: video
+    categories: ["video"]
     extensions: [".webm"]
-    accepts_from: []
-    engines: [ffmpeg]
-
-  - id: flv
+    accepts_from: ["video"]
+    engines: ["ffmpeg"]
+    status: planned
+  - id: "flv"
     name: "FLV 视频"
-    category: video
+    categories: ["video"]
     extensions: [".flv"]
-    accepts_from: []
-    engines: [ffmpeg]
+    accepts_from: ["video"]
+    engines: ["ffmpeg"]
+    status: planned
 
   # ── 4. 电子书 ──
-  - id: epub
+  - id: "epub"
     name: "EPUB 电子书"
-    category: ebook
+    categories: ["ebook"]
     extensions: [".epub"]
-    accepts_from: []
-    engines: [ebook]
-
-  - id: mobi
+    accepts_from: ["ebook"]
+    engines: ["ebook"]
+    status: planned
+  - id: "mobi"
     name: "MOBI 电子书"
-    category: ebook
-    extensions: [".mobi"]
-    accepts_from: []
-    engines: [ebook]
-
-  - id: azw3
+    categories: ["ebook"]
+    extensions: [".mobi", ".prc", ".azw"]
+    accepts_from: ["ebook"]
+    engines: ["ebook"]
+    status: planned
+  - id: "azw3"
     name: "AZW3 电子书"
-    category: ebook
+    categories: ["ebook"]
     extensions: [".azw3"]
-    accepts_from: []
-    engines: [ebook]
-
-  - id: pdf
-    name: "PDF 文档"
-    category: ebook
-    extensions: [".pdf"]
-    accepts_from: []
-    engines: [pdf]
-
-  - id: txt
-    name: "TXT 文本"
-    category: ebook
-    extensions: [".txt"]
-    accepts_from: []
-    engines: [text]
+    accepts_from: ["ebook"]
+    engines: ["ebook"]
+    status: planned
 
   # ── 5. 文档 ──
-  - id: docx
+  - id: "pdf"
+    name: "PDF 文档"
+    categories: ["document", "ebook", "slides"]
+    extensions: [".pdf"]
+    accepts_from: ["document", "ebook", "slides"]
+    engines: ["pdf"]
+    status: planned
+    note: "跨类共享：文档 / 电子书 / 幻灯片"
+  - id: "txt"
+    name: "纯文本"
+    categories: ["document", "ebook"]
+    extensions: [".txt"]
+    accepts_from: ["document", "ebook"]
+    engines: ["text"]
+    status: planned
+    note: "跨类共享：文档 / 电子书"
+  - id: "docx"
     name: "Word 文档"
-    category: document
-    extensions: [".docx"]
-    accepts_from: []
-    engines: [office]
-
-  - id: md
-    name: "Markdown 文档"
-    category: document
-    extensions: [".md"]
-    accepts_from: []
-    engines: [text]
-
-  - id: html
+    categories: ["document"]
+    extensions: [".docx", ".doc"]
+    accepts_from: ["document"]
+    engines: ["office"]
+    status: planned
+  - id: "md"
+    name: "Markdown"
+    categories: ["document"]
+    extensions: [".md", ".markdown"]
+    accepts_from: ["document"]
+    engines: ["text"]
+    status: planned
+  - id: "html"
     name: "HTML 网页"
-    category: document
+    categories: ["document"]
     extensions: [".html", ".htm"]
-    accepts_from: []
-    engines: [web]
-
-  - id: rtf
-    name: "RTF 富文本"
-    category: document
+    accepts_from: ["document"]
+    engines: ["web"]
+    status: planned
+  - id: "rtf"
+    name: "RTF 文档"
+    categories: ["document"]
     extensions: [".rtf"]
-    accepts_from: []
-    engines: [office]
+    accepts_from: ["document"]
+    engines: ["office"]
+    status: planned
 
   # ── 6. 幻灯片 ──
-  - id: pptx
-    name: "PowerPoint 幻灯片"
-    category: slides
-    extensions: [".pptx"]
-    accepts_from: []
-    engines: [office]
-
-  - id: odp
-    name: "ODP 幻灯片"
-    category: slides
+  - id: "pptx"
+    name: "PowerPoint"
+    categories: ["slides"]
+    extensions: [".pptx", ".ppt"]
+    accepts_from: ["slides", "document"]
+    engines: ["office"]
+    status: planned
+  - id: "odp"
+    name: "ODP 演示"
+    categories: ["slides"]
     extensions: [".odp"]
-    accepts_from: []
-    engines: [office]
+    accepts_from: ["slides"]
+    engines: ["office"]
+    status: planned
 
   # ── 7. 表格 ──
-  - id: xlsx
+  - id: "xlsx"
     name: "Excel 表格"
-    category: spreadsheet
-    extensions: [".xlsx"]
-    accepts_from: []
-    engines: [office]
-
-  - id: csv
-    name: "CSV 表格"
-    category: spreadsheet
+    categories: ["spreadsheet"]
+    extensions: [".xlsx", ".xls"]
+    accepts_from: ["spreadsheet"]
+    engines: ["office"]
+    status: planned
+  - id: "csv"
+    name: "CSV 逗号分隔"
+    categories: ["spreadsheet"]
     extensions: [".csv"]
-    accepts_from: []
-    engines: [table]
-
-  - id: json
+    accepts_from: ["spreadsheet"]
+    engines: ["table"]
+    status: planned
+  - id: "json"
     name: "JSON 数据"
-    category: spreadsheet
+    categories: ["spreadsheet", "palette"]
     extensions: [".json"]
-    accepts_from: []
-    engines: [table]
-
-  - id: xml
+    accepts_from: ["spreadsheet", "palette"]
+    engines: ["table"]
+    status: planned
+    note: "跨类共享：表格 / 调色板"
+  - id: "xml"
     name: "XML 数据"
-    category: spreadsheet
+    categories: ["spreadsheet"]
     extensions: [".xml"]
-    accepts_from: []
-    engines: [table]
+    accepts_from: ["spreadsheet"]
+    engines: ["table"]
+    status: planned
 
   # ── 8. 字体 ──
-  - id: ttf
+  - id: "ttf"
     name: "TTF 字体"
-    category: font
+    categories: ["font"]
     extensions: [".ttf"]
-    accepts_from: []
-    engines: [font]
-
-  - id: otf
+    accepts_from: ["font"]
+    engines: ["font"]
+    status: planned
+  - id: "otf"
     name: "OTF 字体"
-    category: font
+    categories: ["font"]
     extensions: [".otf"]
-    accepts_from: []
-    engines: [font]
-
-  - id: woff2
-    name: "WOFF2 网页字体"
-    category: font
-    extensions: [".woff2"]
-    accepts_from: []
-    engines: [font]
-
-  - id: ufo
-    name: "UFO 字体工程"
-    category: font
+    accepts_from: ["font"]
+    engines: ["font"]
+    status: planned
+  - id: "woff2"
+    name: "WOFF2 字体"
+    categories: ["font"]
+    extensions: [".woff2", ".woff"]
+    accepts_from: ["font"]
+    engines: ["font"]
+    status: planned
+  - id: "ufo"
+    name: "UFO 源文件"
+    categories: ["font"]
     extensions: [".ufo"]
-    accepts_from: []
-    engines: [font]
+    accepts_from: ["font"]
+    engines: ["font"]
+    status: planned
 
   # ── 9. 调色板 ──
-  - id: ase
-    name: "ASE 调色板"
-    category: palette
+  - id: "ase"
+    name: "ASE 色板"
+    categories: ["palette"]
     extensions: [".ase"]
-    accepts_from: []
-    engines: [color]
-
-  - id: aco
-    name: "ACO 调色板"
-    category: palette
+    accepts_from: ["palette"]
+    engines: ["color"]
+    status: planned
+  - id: "aco"
+    name: "ACO 色板"
+    categories: ["palette"]
     extensions: [".aco"]
-    accepts_from: []
-    engines: [color]
-
-  - id: gpl
-    name: "GPL 调色板"
-    category: palette
+    accepts_from: ["palette"]
+    engines: ["color"]
+    status: planned
+  - id: "gpl"
+    name: "GPL 色板"
+    categories: ["palette"]
     extensions: [".gpl"]
-    accepts_from: []
-    engines: [color]
+    accepts_from: ["palette"]
+    engines: ["color"]
+    status: planned
 
   # ── 10. 3D 模型 ──
-  - id: obj
-    name: "OBJ 3D 模型"
-    category: model3d
+  - id: "obj"
+    name: "OBJ 模型"
+    categories: ["model3d"]
     extensions: [".obj"]
-    accepts_from: []
-    engines: [model3d]
-
-  - id: fbx
-    name: "FBX 3D 模型"
-    category: model3d
+    accepts_from: ["model3d"]
+    engines: ["model3d"]
+    status: planned
+  - id: "fbx"
+    name: "FBX 模型"
+    categories: ["model3d"]
     extensions: [".fbx"]
-    accepts_from: []
-    engines: [model3d]
-
-  - id: stl
-    name: "STL 3D 打印模型"
-    category: model3d
+    accepts_from: ["model3d"]
+    engines: ["model3d"]
+    status: planned
+  - id: "stl"
+    name: "STL 模型"
+    categories: ["model3d"]
     extensions: [".stl"]
-    accepts_from: []
-    engines: [model3d]
-
-  - id: gltf
-    name: "glTF 3D 模型"
-    category: model3d
+    accepts_from: ["model3d"]
+    engines: ["model3d"]
+    status: planned
+  - id: "gltf"
+    name: "glTF 模型"
+    categories: ["model3d"]
     extensions: [".gltf"]
-    accepts_from: []
-    engines: [model3d]
-
-  - id: glb
-    name: "GLB 3D 模型"
-    category: model3d
+    accepts_from: ["model3d"]
+    engines: ["model3d"]
+    status: planned
+  - id: "glb"
+    name: "GLB 模型"
+    categories: ["model3d"]
     extensions: [".glb"]
-    accepts_from: []
-    engines: [model3d]
-
-  - id: geo_json
-    name: "MC 基岩版 3D 模型"
-    category: model3d
-    extensions: [".geo.json"]
-    accepts_from: [model3d]
-    engines: [minecraft]
+    accepts_from: ["model3d"]
+    engines: ["model3d"]
+    status: planned
+  - id: "geo_json"
+    name: "MC 基岩模型"
+    categories: ["model3d"]
+    extensions: [".geo.json", ".geo_json"]
+    accepts_from: ["model3d", "minecraft"]
+    engines: ["minecraft"]
+    status: planned
 
   # ── 11. 纹理 ──
-  - id: dds
+  - id: "dds"
     name: "DDS 纹理"
-    category: texture
+    categories: ["texture"]
     extensions: [".dds"]
-    accepts_from: [image]
-    engines: [texture]
-
-  - id: astc
+    accepts_from: ["texture", "image"]
+    engines: ["texture"]
+    status: planned
+    note: "与图像互转"
+  - id: "astc"
     name: "ASTC 纹理"
-    category: texture
+    categories: ["texture"]
     extensions: [".astc"]
-    accepts_from: [image]
-    engines: [texture]
-
-  - id: ktx
+    accepts_from: ["texture", "image"]
+    engines: ["texture"]
+    status: planned
+    note: "与图像互转"
+  - id: "ktx"
     name: "KTX 纹理"
-    category: texture
-    extensions: [".ktx"]
-    accepts_from: [image]
-    engines: [texture]
-
-  - id: xnb
-    name: "XNB 纹理"
-    category: texture
+    categories: ["texture"]
+    extensions: [".ktx", ".ktx2"]
+    accepts_from: ["texture", "image"]
+    engines: ["texture"]
+    status: planned
+    note: "与图像互转"
+  - id: "xnb"
+    name: "XNB 资源"
+    categories: ["texture"]
     extensions: [".xnb"]
-    accepts_from: [image]
-    engines: [texture]
-
-  - id: tga
-    name: "TGA 纹理"
-    category: texture
+    accepts_from: ["texture", "image"]
+    engines: ["texture"]
+    status: planned
+    note: "与图像互转"
+  - id: "tga"
+    name: "TGA 图像"
+    categories: ["texture"]
     extensions: [".tga"]
-    accepts_from: [image]
-    engines: [texture]
+    accepts_from: ["texture", "image"]
+    engines: ["texture"]
+    status: planned
+    note: "与图像互转"
 
   # ── 12. 网格 ──
-  - id: ply
-    name: "PLY 网格"
-    category: mesh
+  - id: "ply"
+    name: "PLY 点云网格"
+    categories: ["mesh"]
     extensions: [".ply"]
-    accepts_from: []
-    engines: [mesh]
-
-  - id: off
+    accepts_from: ["mesh", "model3d"]
+    engines: ["mesh"]
+    status: planned
+  - id: "off"
     name: "OFF 网格"
-    category: mesh
+    categories: ["mesh"]
     extensions: [".off"]
-    accepts_from: []
-    engines: [mesh]
+    accepts_from: ["mesh", "model3d"]
+    engines: ["mesh"]
+    status: planned
 
   # ── 13. 哈希计算 ──
-  - id: md5
-    name: "MD5 哈希"
-    category: hash
+  - id: "md5"
+    name: "MD5 校验"
+    categories: ["hash"]
     extensions: [".md5"]
     accepts_from: ["*"]
-    engines: [hash]
-
-  - id: sha
-    name: "SHA 哈希"
-    category: hash
-    extensions: [".sha", ".sha256", ".sha512"]
+    engines: ["hash"]
+    status: planned
+    note: "接受任意文件输入"
+  - id: "sha"
+    name: "SHA 校验"
+    categories: ["hash"]
+    extensions: [".sha", ".sha1", ".sha256", ".sha512"]
     accepts_from: ["*"]
-    engines: [hash]
-
-  - id: crc
+    engines: ["hash"]
+    status: planned
+    note: "接受任意文件输入"
+  - id: "crc"
     name: "CRC 校验"
-    category: hash
+    categories: ["hash"]
     extensions: [".crc"]
     accepts_from: ["*"]
-    engines: [hash]
-
-  - id: base64
+    engines: ["hash"]
+    status: planned
+    note: "接受任意文件输入"
+  - id: "base64"
     name: "Base64 编码"
-    category: hash
+    categories: ["hash"]
     extensions: [".b64", ".base64"]
     accepts_from: ["*"]
-    engines: [hash]
+    engines: ["hash"]
+    status: planned
+    note: "接受任意文件输入"
 
   # ── 14. 绣花 ──
-  - id: pes
+  - id: "pes"
     name: "PES 绣花"
-    category: embroidery
+    categories: ["embroidery"]
     extensions: [".pes"]
-    accepts_from: []
-    engines: [embroidery]
-
-  - id: dst
+    accepts_from: ["embroidery"]
+    engines: ["embroidery"]
+    status: planned
+  - id: "dst"
     name: "DST 绣花"
-    category: embroidery
+    categories: ["embroidery"]
     extensions: [".dst"]
-    accepts_from: []
-    engines: [embroidery]
-
-  - id: jef
+    accepts_from: ["embroidery"]
+    engines: ["embroidery"]
+    status: planned
+  - id: "jef"
     name: "JEF 绣花"
-    category: embroidery
+    categories: ["embroidery"]
     extensions: [".jef"]
-    accepts_from: []
-    engines: [embroidery]
+    accepts_from: ["embroidery"]
+    engines: ["embroidery"]
+    status: planned
 
   # ── 15. GPS ──
-  - id: gpx
+  - id: "gpx"
     name: "GPX 轨迹"
-    category: gps
+    categories: ["gps"]
     extensions: [".gpx"]
-    accepts_from: []
-    engines: [gps]
-
-  - id: kml
-    name: "KML 地图"
-    category: gps
+    accepts_from: ["gps"]
+    engines: ["gps"]
+    status: planned
+  - id: "kml"
+    name: "KML 地标"
+    categories: ["gps"]
     extensions: [".kml"]
-    accepts_from: []
-    engines: [gps]
-
-  - id: tcx
-    name: "TCX 运动数据"
-    category: gps
+    accepts_from: ["gps"]
+    engines: ["gps"]
+    status: planned
+  - id: "tcx"
+    name: "TCX 训练"
+    categories: ["gps"]
     extensions: [".tcx"]
-    accepts_from: []
-    engines: [gps]
-
-  - id: geojson
-    name: "GeoJSON 地理数据"
-    category: gps
+    accepts_from: ["gps"]
+    engines: ["gps"]
+    status: planned
+  - id: "geojson"
+    name: "GeoJSON 地理"
+    categories: ["gps"]
     extensions: [".geojson"]
-    accepts_from: []
-    engines: [gps]
+    accepts_from: ["gps"]
+    engines: ["gps"]
+    status: planned
 
   # ── 16. 字幕 ──
-  - id: srt
+  - id: "srt"
     name: "SRT 字幕"
-    category: subtitle
+    categories: ["subtitle"]
     extensions: [".srt"]
-    accepts_from: []
-    engines: [subtitle]
-
-  - id: ass
+    accepts_from: ["subtitle", "video"]
+    engines: ["subtitle"]
+    status: planned
+  - id: "ass"
     name: "ASS 字幕"
-    category: subtitle
-    extensions: [".ass"]
-    accepts_from: []
-    engines: [subtitle]
-
-  - id: vtt
-    name: "VTT 字幕"
-    category: subtitle
+    categories: ["subtitle"]
+    extensions: [".ass", ".ssa"]
+    accepts_from: ["subtitle", "video"]
+    engines: ["subtitle"]
+    status: planned
+  - id: "vtt"
+    name: "WebVTT 字幕"
+    categories: ["subtitle"]
     extensions: [".vtt"]
-    accepts_from: []
-    engines: [subtitle]
-
-  - id: lrc
+    accepts_from: ["subtitle"]
+    engines: ["subtitle"]
+    status: planned
+  - id: "lrc"
     name: "LRC 歌词"
-    category: subtitle
+    categories: ["subtitle"]
     extensions: [".lrc"]
-    accepts_from: []
-    engines: [subtitle]
+    accepts_from: ["subtitle", "audio"]
+    engines: ["subtitle"]
+    status: planned
 
   # ── 17. 播放列表 ──
-  - id: m3u
-    name: "M3U 播放列表"
-    category: playlist
+  - id: "m3u"
+    name: "M3U 列表"
+    categories: ["playlist"]
     extensions: [".m3u"]
-    accepts_from: []
-    engines: [playlist]
-
-  - id: m3u8
-    name: "M3U8 播放列表"
-    category: playlist
+    accepts_from: ["playlist"]
+    engines: ["playlist"]
+    status: planned
+  - id: "m3u8"
+    name: "M3U8 列表"
+    categories: ["playlist"]
     extensions: [".m3u8"]
-    accepts_from: []
-    engines: [playlist]
-
-  - id: cue
-    name: "CUE 曲目表"
-    category: playlist
+    accepts_from: ["playlist"]
+    engines: ["playlist"]
+    status: planned
+  - id: "cue"
+    name: "CUE 索引"
+    categories: ["playlist"]
     extensions: [".cue"]
-    accepts_from: []
-    engines: [playlist]
+    accepts_from: ["playlist"]
+    engines: ["playlist"]
+    status: planned
 
   # ── 18. 压缩包 ──
-  - id: zip
+  - id: "zip"
     name: "ZIP 压缩包"
-    category: archive
+    categories: ["archive"]
     extensions: [".zip"]
-    accepts_from: ["*"]
-    engines: [archive]
-
-  - id: rar
+    accepts_from: ["archive"]
+    engines: ["archive"]
+    status: planned
+  - id: "rar"
     name: "RAR 压缩包"
-    category: archive
+    categories: ["archive"]
     extensions: [".rar"]
-    accepts_from: []
-    engines: [archive]
-
-  - id: seven_z
+    accepts_from: ["archive"]
+    engines: ["archive"]
+    status: planned
+  - id: "seven_z"
     name: "7Z 压缩包"
-    category: archive
+    categories: ["archive"]
     extensions: [".7z"]
-    accepts_from: []
-    engines: [archive]
-
-  - id: tar_gz
+    accepts_from: ["archive"]
+    engines: ["archive"]
+    status: planned
+  - id: "tar_gz"
     name: "TAR.GZ 压缩包"
-    category: archive
-    extensions: [".tar.gz", ".tgz"]
-    accepts_from: []
-    engines: [archive]
+    categories: ["archive"]
+    extensions: [".tar.gz", ".tgz", ".tar"]
+    accepts_from: ["archive"]
+    engines: ["archive"]
+    status: planned
 
   # ── 19. 我的世界专区 ──
-  - id: mcworld
-    name: "MC 基岩版世界存档"
-    category: minecraft
+  - id: "mcworld"
+    name: "基岩版世界"
+    categories: ["minecraft"]
     extensions: [".mcworld"]
-    accepts_from: [mcworld_java]
-    engines: [minecraft]
+    accepts_from: ["minecraft"]
+    engines: ["minecraft"]
+    status: planned
     params:
       - key: "source_version"
         type: "dropdown"
@@ -640,33 +758,35 @@ formats:
         type: "dropdown"
         label: "目标版本"
         options: ["26.3", "26.2", "26.1.2", "1.21.4", "1.20.1"]
-
-  - id: mcpack
-    name: "MC 基岩版资源包"
-    category: minecraft
-    extensions: [".mcpack"]
-    accepts_from: [mcpack_java]
-    engines: [minecraft]
-
-  - id: mcworld_java
-    name: "MC Java 版世界存档"
-    category: minecraft
-    extensions: [".zip"]
-    accepts_from: [mcworld]
-    engines: [minecraft]
-
-  - id: mcpack_java
-    name: "MC Java 版资源包"
-    category: minecraft
-    extensions: [".zip"]
-    accepts_from: [mcpack]
-    engines: [minecraft]
+  - id: "mcpack"
+    name: "基岩版资源包"
+    categories: ["minecraft"]
+    extensions: [".mcpack", ".mcaddon"]
+    accepts_from: ["minecraft"]
+    engines: ["minecraft"]
+    status: planned
+  - id: "mcworld_java"
+    name: "Java 版存档"
+    categories: ["minecraft"]
+    extensions: [".mcworld", ".zip"]
+    accepts_from: ["minecraft", "archive"]
+    engines: ["minecraft"]
+    status: planned
+    note: "本质是 zip"
+  - id: "mcpack_java"
+    name: "Java 版资源包"
+    categories: ["minecraft"]
+    extensions: [".mcpack", ".zip"]
+    accepts_from: ["minecraft", "archive"]
+    engines: ["minecraft"]
+    status: planned
+    note: "本质是 zip"
 
 flows:
   - name: "video_to_gif"
-    source: [mp4, mkv, mov, avi, webm]
-    target: [gif]
-    engine: ffmpeg
+    source: ["mp4", "mkv", "mov", "avi", "webm"]
+    target: ["gif"]
+    engine: "ffmpeg"
     params:
       - key: "fps"
         type: "slider"
@@ -675,28 +795,99 @@ flows:
         min: 1
         max: 60
         step: 1
-
   - name: "video_to_audio"
-    source: [mp4, mkv, mov, avi, webm]
-    target: [mp3, wav, flac, aac, m4a, ogg]
-    engine: ffmpeg
-
+    source: ["mp4", "mkv", "mov", "avi", "webm"]
+    target: ["mp3", "wav", "flac", "aac", "m4a", "ogg"]
+    engine: "ffmpeg"
   - name: "image_to_image"
-    source: [jpg, png, webp, heic, bmp, tiff, ico, hdr, exr]
-    target: [jpg, png, webp, bmp, tiff, ico]
-    engine: image
-
+    source: ["jpg", "png", "webp", "heic", "bmp", "tiff", "ico", "hdr", "exr"]
+    target: ["jpg", "png", "webp", "bmp", "tiff", "ico"]
+    engine: "image"
   - name: "texture_to_image"
-    source: [dds, astc, ktx, xnb, tga]
-    target: [png, jpg]
-    engine: texture
-
+    source: ["dds", "astc", "ktx", "xnb", "tga"]
+    target: ["png", "jpg"]
+    engine: "texture"
   - name: "ncm_to_mp3"
-    source: [ncm]
-    target: [mp3]
-    engine: netease
-
+    source: ["ncm"]
+    target: ["mp3"]
+    engine: "netease"
   - name: "mcworld_convert"
-    source: [mcworld, mcworld_java]
-    target: [mcworld, mcworld_java]
-    engine: minecraft
+    source: ["mcworld", "mcworld_java"]
+    target: ["mcworld", "mcworld_java"]
+    engine: "minecraft"
+  - name: "image_to_image"
+    source: ["jpg", "png", "webp", "heic", "svg", "gif", "bmp", "tiff", "ico", "hdr", "exr"]
+    target: ["jpg", "png", "webp", "heic", "svg", "gif", "bmp", "tiff", "ico", "hdr", "exr"]
+    engine: "image"
+  - name: "audio_to_audio"
+    source: ["mp3", "wav", "flac", "aac", "m4a", "ogg", "midi", "ncm", "kgm", "qmc"]
+    target: ["mp3", "wav", "flac", "aac", "m4a", "ogg", "midi", "ncm", "kgm", "qmc"]
+    engine: "audio"
+  - name: "video_to_video"
+    source: ["mp4", "mkv", "mov", "avi", "webm", "flv"]
+    target: ["mp4", "mkv", "mov", "avi", "webm", "flv"]
+    engine: "video"
+  - name: "ebook_to_ebook"
+    source: ["epub", "mobi", "azw3"]
+    target: ["epub", "mobi", "azw3"]
+    engine: "ebook"
+  - name: "document_to_document"
+    source: ["pdf", "txt", "docx", "md", "html", "rtf"]
+    target: ["pdf", "txt", "docx", "md", "html", "rtf"]
+    engine: "document"
+  - name: "slides_to_slides"
+    source: ["pptx", "odp"]
+    target: ["pptx", "odp"]
+    engine: "slides"
+  - name: "spreadsheet_to_spreadsheet"
+    source: ["xlsx", "csv", "json", "xml"]
+    target: ["xlsx", "csv", "json", "xml"]
+    engine: "spreadsheet"
+  - name: "font_to_font"
+    source: ["ttf", "otf", "woff2", "ufo"]
+    target: ["ttf", "otf", "woff2", "ufo"]
+    engine: "font"
+  - name: "palette_to_palette"
+    source: ["ase", "aco", "gpl"]
+    target: ["ase", "aco", "gpl"]
+    engine: "palette"
+  - name: "model3d_to_model3d"
+    source: ["obj", "fbx", "stl", "gltf", "glb", "geo_json"]
+    target: ["obj", "fbx", "stl", "gltf", "glb", "geo_json"]
+    engine: "model3d"
+  - name: "texture_to_texture"
+    source: ["dds", "astc", "ktx", "xnb", "tga"]
+    target: ["dds", "astc", "ktx", "xnb", "tga"]
+    engine: "texture"
+  - name: "mesh_to_mesh"
+    source: ["ply", "off"]
+    target: ["ply", "off"]
+    engine: "mesh"
+  - name: "hash_to_hash"
+    source: ["md5", "sha", "crc", "base64"]
+    target: ["md5", "sha", "crc", "base64"]
+    engine: "hash"
+  - name: "embroidery_to_embroidery"
+    source: ["pes", "dst", "jef"]
+    target: ["pes", "dst", "jef"]
+    engine: "embroidery"
+  - name: "gps_to_gps"
+    source: ["gpx", "kml", "tcx", "geojson"]
+    target: ["gpx", "kml", "tcx", "geojson"]
+    engine: "gps"
+  - name: "subtitle_to_subtitle"
+    source: ["srt", "ass", "vtt", "lrc"]
+    target: ["srt", "ass", "vtt", "lrc"]
+    engine: "subtitle"
+  - name: "playlist_to_playlist"
+    source: ["m3u", "m3u8", "cue"]
+    target: ["m3u", "m3u8", "cue"]
+    engine: "playlist"
+  - name: "archive_to_archive"
+    source: ["zip", "rar", "seven_z", "tar_gz"]
+    target: ["zip", "rar", "seven_z", "tar_gz"]
+    engine: "archive"
+  - name: "minecraft_to_minecraft"
+    source: ["mcworld", "mcpack", "mcworld_java", "mcpack_java"]
+    target: ["mcworld", "mcpack", "mcworld_java", "mcpack_java"]
+    engine: "minecraft"

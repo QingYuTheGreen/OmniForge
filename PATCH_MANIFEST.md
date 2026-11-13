@@ -1,4 +1,4 @@
-# PATCH_MANIFEST — OmniForge 增量包（v0.5.4）
+# PATCH_MANIFEST — OmniForge 增量包（v0.6.0 · 格式体系空壳）
 
 > 给接手的 AI：这是**增量包**，不是完整工程。按「怎么用」覆盖到对应基线即可，不要单独构建它。
 
@@ -6,69 +6,62 @@
 
 - 工程：OmniForge（Flutter 跨平台文件转换器，`com.file.omniforge.app`）
 - **增量基线：commit `e8dcc42`（v0.5.3）**
-- 内容：基线 → 当前状态的全部差异（新增 18 个文件 + 修改 39 个文件，**无删除**）
+- 内容：基线 → 当前状态的全部差异
 - 生成时间：2026-11-13
+- 本轮主题：**把 19 大类格式体系一次性铺满，先做空壳**（`stage: shell`），转换引擎仍未接入
 
 ## 二、怎么用
 
 1. 拿到基线：`git clone` 后 `git checkout e8dcc42`。
 2. 把本包解压**覆盖**到工程根目录（结构与工程一致，同名直接覆盖）。
 3. `flutter pub get` → `flutter analyze`（期望 0 error）→ `flutter build apk --release --split-per-abi`。
-4. 覆盖后 `ios/Flutter/ephemeral`、`*/generated_plugin_registrant`、`.flutter-plugins-dependencies` 之类的差异属正常，由 `flutter pub get` 重新生成。
+4. 覆盖后 `ios/Flutter/ephemeral`、`*/generated_plugin_registrant`、`.flutter-plugins-dependencies` 等差异属正常，由 `flutter pub get` 重新生成。
 
-## 三、本轮修了什么
+## 三、这轮改了什么
 
-### 1. 点「打开」时弹「允许访问照片和视频」——已消除
+### 1. `assets/formats.yaml` 全量重写
 
-**现象**：Android 13+/14 上点结果的「打开」，系统弹「允许 OmniForge 访问照片和视频？」。
+- 新增 `stage: shell` 标记：格式/类型已全量登记，引擎未接入。
+- 新增 `categories:` 段：19 类（`key` / 中文名 `name` / 图标名 `icon` / `order`），UI 的类型下拉直接由它生成。
+- 格式从 88 条重排为**19 类 88 种**，每条都补齐：
+  - `categories:`（复数）——支持**跨类共享**：`pdf` = 文档/电子书/幻灯片，`txt` = 文档/电子书，`json` = 表格/调色板；
+  - `extensions:` 全量别名（`.jpeg/.jpe/.jfif`、`.tif`、`.heif`、`.oga/.opus`、`.mid`、`.doc`、`.ppt`、`.xls`、`.woff`、`.ssa`、`.ktx2`、`.tgz`、`.qmc0/.qmc3/.qmcflac`、`.kgma` 等）；
+  - `accepts_from:` 按类铺满（同类别内互转全部可达；`gif` 接受视频、`mp3/wav` 接受视频、纹理与图像互转、`mcworld_java/mcpack_java` 兼容压缩包、哈希类写 `"*"` 表示任意输入）；
+  - `status: planned`（空壳标记）+ 可选 `note`（如「本质是 zip」「接受任意文件输入」）。
+- `flows:` 从 6 条扩到 **25 条**：原有语义链路保留，另加每类内部互通链路。
+- 修掉一个历史 bug：`id: off` 在 YAML 1.1 里会被解析成布尔 `false`，导致 OFF 网格的 id 一直是空字符串。现在所有 id 都加了引号。
 
-**根因**（不是我们代码申请，是插件行为）：
-- 输出在公共目录 `/storage/emulated/0/OmniForge/…`；
-- `open_filex` 的 Android 实现 `OpenFilePlugin.java` 里 `pathRequiresPermission()` 判断文件是否在应用沙箱内，公共目录 → 判定为「需要权限」；
-- SDK ≥ 33 且 MIME 以 `image` 开头（PNG/JPG 都算）→ 调 `requestPermission(READ_MEDIA_IMAGES)`，弹的就是这个框；
-- 但它最终是通过 FileProvider 授出 `content://` + `FLAG_GRANT_READ_URI_PERMISSION` 给目标应用，**这个读权限对它自己毫无必要**。
+### 2. 数据层
 
-**改法**（`lib/features/home/home_page.dart`）：新增 `_openablePath()`，Android 上先把文件复制到应用缓存（`getTemporaryDirectory()/open/`）再交给 `OpenFilex.open()`。路径落在沙箱内 → 插件直接 `startActivity()`，不再申请任何权限。
-- 非 Android 平台原样返回，不复制；
-- 每次打开前清空上一份缓存副本；
-- 复制失败（极端情况）回退原路径，保证仍能打开。
+- `lib/models/format_node.dart`：`FormatNode` 增加 `categories`（多分类）、`status`、`note`，保留 `category` getter 兼容旧代码；新增 `FormatCategory`（key/name/icon/order）。
+- `lib/registry/registry_manager.dart`：加载 `categories` 与 `stage`；新增 `getCategories()` / `getCategory()` / `getFormatByExtension()` / `isShellStage`；`getFormatsByCategory` 改为按多分类匹配；`initialize()` 幂等。
+- **新增** `lib/registry/format_catalog.dart`：把注册表转成 UI 目录
+  - `FormatOption`（label / value / ext / category / extensions / planned / note）；
+  - `FormatCatalog`（19 类类型表 + 分类→格式表，`typeOf` / `formatsOf` / `formatByExt` / `uniqueFormatCount`）；
+  - `formatCatalogProvider`（Riverpod Provider）；
+  - `categoryIcon()` 19 类图标映射。
 
-**副作用**：`打开` 会额外占一份临时副本（下次打开时清掉）。若以后想彻底避免复制，正解是换掉 `open_filex` 或自建 Intent 通道，**不要**去申请那个权限。
+### 3. UI
 
-### 2. 桌面图标与设置页预览「不吻合」——已统一
+- `lib/features/home/home_provider.dart`：**删掉写死的 7 条类型表 / 5 条格式表**（原来只有 image/audio/video/document/archive + 两个 MC 类型，跟注册表完全脱节），`FormatOption` 改为从 `format_catalog.dart` 转出。
+- `lib/features/home/config_page.dart`：输入/输出类型与格式全部改从 `formatCatalogProvider` 取；自动识别改为按**扩展名别名**反查（`tif→tiff`、`jpeg→jpg`、`tar.gz→tar_gz` 都能命中）；输出改用 `FormatOption.ext`（多段扩展名如 `tar.gz` 正确）；底部弹窗改成可滚动（19 类 + 11 格式不再挤在一起）；底部加一行空壳提示「已登记 19 类 / 88 种格式，转换引擎尚未接入」。
+- `lib/utils/file_type_detector.dart`：类型键从 7 个（含 `mc_bedrock/mc_java`）改为与 yaml 一致的 **19 个分类键**；补全全部扩展名映射（含 `.jfif/.dib/.wave/.opus/.kgma/.qmc*/prc/.azw/markdown/.htm/.tsv/.ufo/.ktx2/.ssa/.geojson/.b64/...`）；新增复合扩展名处理（`.tar.gz` / `.tar.bz2` / `.tar.xz` / `.geo.json`）；ZIP 分支里 MC 判断改为判 `minecraft`。
+- `lib/router/conversion_router.dart`：`accepts_from` 支持 `"*"` 通配（原来哈希类写 `"*"` 却永远匹配不到，等于死数据）；分类匹配改用 `categories.contains`。
+- `lib/main.dart`：启动先 `WidgetsFlutterBinding.ensureInitialized()` + `await RegistryManager().initialize()`，再 `runApp`。
 
-**根因**：
-- 三张图标素材是**白底不透明 PNG**，白边比例还不一致（默认 10%、铁砧 18%、火焰 17.6%）；
-- 工程只有 legacy `mipmap-*.png`，**没有 `mipmap-anydpi-v26` 自适应图标**；
-- 桌面拿到 legacy 方形图 → 系统加白色圆角底板并缩到安全区（图形变小、白板变厚）；
-- 设置页预览走 `BoxFit.cover` + `ClipRRect` → 白边被裁掉（图形更大）。
-- 同一张图两套渲染，于是不一致。
+### 4. 自检脚本
 
-**改法**：
-- 新增 `mipmap-anydpi-v26/ic_launcher{,_anvil,_flame}.xml`：白底 + 前景层图形，图形占**可见区 86%**（三套统一）；
-- 各密度新增 `ic_launcher*_fg.png`（108dp 画布，透明底）；
-- legacy `mipmap-*.png`（48dp）重做为「白底 + 图形 86%」，与预览同比例；
-- `assets/icons/*.png` 同步重做，设置页预览与桌面完全同源；
-- `AndroidManifest.xml` 为 application 与三个 `activity-alias` 补 `android:roundIcon`；
-- iOS 主图标（19 个尺寸）与备选 `IconAnvil/IconFlame@2x/3x` 用同一套素材重写，避免两端观感不一致。
-
-> 想改图标比例只改一个数：`gen_icons.py` 里的 `ART_RATIO_VISIBLE`（当前 0.86），重跑即可同时更新预览图、legacy mipmap、自适应前景与 iOS 图标。
-
-### 3. Android Gradle 配置
-
-本包的 `android/build.gradle`、`android/gradle.properties`、`.github/workflows/build.yml` **与基线 e8dcc42 完全一致**（基线已含 `plugins.withId` + JavaCompile JVM 17 + `kotlin.jvm.target.validation.mode=warning` + Windows 长路径的修复），本轮未改动。
+- 新增 `tool/check_formats.dart`：`dart run tool/check_formats.dart` 校验 yaml 结构（空 id、无分类、分类不存在、无扩展名、扩展名缺前缀、无 status、空分类），并打印每类格式数。
 
 ## 四、验证记录
 
-- `flutter pub get`：Got dependencies（依赖未变）
-- `flutter analyze`：0 error（8 条 warning/info）
-- `flutter build bundle`：通过
-- manifest XML 结构校验：application 1 个、3 个 alias 的 icon/roundIcon 均有效
-- 图标尺寸核对：legacy 48/72/96/144/192；自适应前景 108/162/216/324/432
-- **未验证**：真机/模拟器上的实际桌面渲染（需打包安装）；iOS 图标在 Xcode 资源目录中的显示
+- `dart run tool/check_formats.dart`：19 类 / 88 种格式 / 25 条 flow，结构自检全部通过（图像 11、音频 10、视频 6、电子书 5、文档 6、幻灯片 3、表格 4、字体 4、调色板 4、3D 6、纹理 5、网格 2、哈希 4、绣花 3、GPS 4、字幕 4、播放列表 3、压缩包 4、MC 4）
+- `flutter analyze`：0 error
+- `flutter build bundle`：通过，`build/flutter_assets/assets/formats.yaml` 已打入（22.7 KB）
+- **未验证**：真机上的下拉渲染与识别预填（需打包安装）；`flutter test` 未跑
 
-## 五、注意
+## 五、注意 / 下一轮
 
-- 不要为了「省一次复制」去给应用加 `READ_MEDIA_*` 运行时申请——那正是要消除的弹窗。
-- `READ_MEDIA_IMAGES/VIDEO/AUDIO` 仍会被 `open_filex` 的 manifest 合并进来，属预期；我们的代码不申请它们。
-- 自适应图标生效后，桌面上图形的大小由 `ic_launcher*_fg.png` 决定；要调大小只改前景层，别退回纯 legacy 图标。
+- 现在所有格式的 `status` 都是 `planned`，转换仍走 `home_provider` 里**模拟进度**的老路径（不会真的转码）。接引擎时按 `engines` 字段挂对应 `IEngine`，把 `status` 改成 `ready`，UI 的空壳提示会自动消失（`isShellStage` 读 `stage`，届时改成 `ready` 或删掉该行）。
+- 同一格式在多个分类下会重复出现（pdf/txt/json），这是**有意**的：分类是展示维度，`id` 仍是唯一键。
+- 新增分类时只改 `assets/formats.yaml` + `file_type_detector.dart` 的 `_extType/_typeLabels` + `format_catalog.dart` 的图标表，三处即可，不要再往回加写死的 UI 表。

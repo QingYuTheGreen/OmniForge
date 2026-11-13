@@ -34,20 +34,19 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     final detected = await FileTypeDetector.detect(widget.initialFilePath);
     if (!detected.isKnown || !mounted) return;
 
-    // 类型：detected.typeKey 与 inputTypeOptions 的 value 对齐
-    final type = inputTypeOptions.firstWhere(
-      (o) => o.value == detected.typeKey,
-      orElse: () => FormatOption(
-          label: detected.typeLabel, value: detected.typeKey),
-    );
+    final catalog = ref.read(formatCatalogProvider);
 
-    // 格式：在该类型下按 value 匹配，找不到就用识别结果临时构造一个
-    final list = inputFormatsByType[detected.typeKey] ?? const [];
-    final format = list.firstWhere(
-      (f) => f.value == detected.formatExt,
-      orElse: () => FormatOption(
-          label: detected.formatLabel, value: detected.formatExt),
-    );
+    // 类型：detected.typeKey 就是 formats.yaml 里的分类键
+    final type = catalog.typeOf(detected.typeKey) ??
+        FormatOption(label: detected.typeLabel, value: detected.typeKey);
+
+    // 格式：在该类型下按扩展名别名匹配（tif→tiff、jpeg→jpg 都能命中）
+    final format = catalog.formatByExt(detected.typeKey, detected.formatExt) ??
+        FormatOption(
+          label: detected.formatLabel,
+          value: detected.formatExt,
+          ext: detected.formatExt,
+        );
 
     setState(() {
       _inputType = type;
@@ -59,6 +58,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final notifier = ref.read(homeProvider.notifier);
+    final catalog = ref.watch(formatCatalogProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +75,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               }
               notifier.startConvert(
                 widget.initialFilePath,
-                outputExt: _outputFormat!.value,
+                outputExt: _outputFormat!.ext,
               );
               Navigator.pop(context);
             },
@@ -114,7 +114,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             value: _inputType?.label,
             onTap: () => _pick(
               title: '选择输入类型',
-              options: inputTypeOptions,
+              options: catalog.types,
               onSelect: (o) => setState(() {
                 _inputType = o;
                 // 类型变了，之前选的格式作废
@@ -128,7 +128,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             enabled: _inputType != null,
             hint: _inputType == null ? '请先选择输入类型' : null,
             onTap: () {
-              final list = inputFormatsByType[_inputType!.value] ?? const [];
+              final list = catalog.formatsOf(_inputType!.value);
               _pick(
                 title: '选择输入格式',
                 options: list,
@@ -141,7 +141,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             value: _outputType?.label,
             onTap: () => _pick(
               title: '选择输出类型',
-              options: outputTypeOptions,
+              options: catalog.types,
               onSelect: (o) => setState(() {
                 _outputType = o;
                 _outputFormat = null;
@@ -154,7 +154,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             enabled: _outputType != null,
             hint: _outputType == null ? '请先选择输出类型' : null,
             onTap: () {
-              final list = outputFormatsByType[_outputType!.value] ?? const [];
+              final list = catalog.formatsOf(_outputType!.value);
               _pick(
                 title: '选择输出格式',
                 options: list,
@@ -180,6 +180,28 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             ),
           ),
           if (_showAdvanced) _advanced(),
+          if (catalog.shellStage) _shellNotice(catalog),
+        ],
+      ),
+    );
+  }
+
+  /// 空壳阶段提示：格式表已全量铺好，但转换引擎还没接
+  Widget _shellNotice(FormatCatalog catalog) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 32),
+      child: Row(
+        children: [
+          Icon(Icons.construction_outlined, size: 16, color: cs.outline),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '空壳阶段：已登记 ${catalog.types.length} 类 / '
+              '${catalog.uniqueFormatCount} 种格式，转换引擎尚未接入',
+              style: TextStyle(fontSize: 12, color: cs.outline),
+            ),
+          ),
         ],
       ),
     );
@@ -285,6 +307,10 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.72,
+      ),
       builder: (ctx) => SafeArea(
         child: ListView(
           shrinkWrap: true,
@@ -298,7 +324,9 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             for (final o in options)
               ListTile(
                 title: Text(o.label),
-                subtitle: o.category != null ? Text(o.category!) : null,
+                subtitle: o.category != null
+                    ? Text('${o.category}${o.note == null ? '' : ' · ${o.note}'}')
+                    : null,
                 onTap: () {
                   Navigator.pop(ctx);
                   onSelect(o);

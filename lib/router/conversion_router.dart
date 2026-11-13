@@ -30,12 +30,16 @@ class ConversionRouter {
       }
     }
 
-    // acceptsFrom 反向边
+    // acceptsFrom 反向边；accepts_from 写 "*" 表示接受任意格式（哈希类）
     for (final target in formats) {
       for (final accepted in target.acceptsFrom) {
+        final isAll = accepted == '*';
         for (final source in formats) {
-          if ((source.id == accepted || source.category == accepted) &&
-              source.id != target.id) {
+          final matched = isAll ||
+              source.id == accepted ||
+              source.categories.contains(accepted) ||
+              source.category == accepted;
+          if (matched && source.id != target.id) {
             adjacency.putIfAbsent(source.id, () => {}).add(target.id);
           }
         }
