@@ -15,14 +15,19 @@ subprojects {
 
 // 插件模块（如 receive_sharing_intent）默认 Java 为 1.8、Kotlin 为 17，
 // AGP 8.12 会因 JVM target 不一致直接报错，这里统一对齐到 17。
+// 注意：不能用 afterEvaluate，:app 已被 evaluationDependsOn 提前求值。
 subprojects { subproject ->
-    subproject.afterEvaluate {
-        if (subproject.extensions.findByName("android") != null) {
+    if (subproject.path != ":app") {
+        subproject.plugins.withId("com.android.library") {
             subproject.android.compileOptions {
                 sourceCompatibility = JavaVersion.VERSION_17
                 targetCompatibility = JavaVersion.VERSION_17
             }
         }
+    }
+    subproject.tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_17.toString()
+        targetCompatibility = JavaVersion.VERSION_17.toString()
     }
 }
 
