@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'home_provider.dart';
 import 'config_page.dart';
 import '../settings/settings_page.dart';
@@ -367,12 +368,38 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
     try {
-      final result = await OpenFilex.open(path);
+      final openPath = await _openablePath(path);
+      final result = await OpenFilex.open(openPath);
       if (result.type != ResultType.done) {
         _toast('没有能打开该文件的应用（${result.message}）');
       }
     } catch (e) {
       _toast('打开失败：$e');
+    }
+  }
+
+  /// 安卓上先把公共目录里的文件复制一份到应用缓存，再交给系统打开。
+  ///
+  /// open_filex 的安卓实现会判断文件路径是否落在应用沙箱内；我们的输出在
+  /// /storage/emulated/0/OmniForge/ 这种公共目录，它会认为需要
+  /// READ_MEDIA_IMAGES / READ_MEDIA_VIDEO 等运行时权限（Android 13+ 弹的就
+  /// 是「访问照片和视频」）。但它最终是走 FileProvider 授出 content:// 给目标
+  /// 应用，读取权限由这次授权临时覆盖，根本不需要该权限。
+  /// 复制到 cache 后路径在沙箱内，插件直接 startActivity，不再弹窗。
+  Future<String> _openablePath(String path) async {
+    if (!Platform.isAndroid) return path;
+    try {
+      final tmp = await getTemporaryDirectory();
+      final dir = Directory('${tmp.path}/open');
+      if (dir.existsSync()) dir.deleteSync(recursive: true);
+      dir.createSync(recursive: true);
+      final name = File(path).uri.pathSegments.last;
+      final dest = File('${dir.path}/$name');
+      await File(path).copy(dest.path);
+      return dest.path;
+    } catch (_) {
+      // 复制失败就退回原路径（可能弹一次权限，但至少能打开）
+      return path;
     }
   }
 

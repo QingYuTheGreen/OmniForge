@@ -17,6 +17,7 @@
         android:label="OmniForge"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">
 
         <!--
@@ -69,6 +70,7 @@
             android:enabled="true"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher"
             android:label="OmniForge"
             android:targetActivity=".MainActivity">
             <intent-filter>
@@ -83,6 +85,7 @@
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_anvil"
+            android:roundIcon="@mipmap/ic_launcher_anvil"
             android:label="OmniForge"
             android:targetActivity=".MainActivity">
             <intent-filter>
@@ -97,6 +100,7 @@
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_flame"
+            android:roundIcon="@mipmap/ic_launcher_flame"
             android:label="OmniForge"
             android:targetActivity=".MainActivity">
             <intent-filter>
