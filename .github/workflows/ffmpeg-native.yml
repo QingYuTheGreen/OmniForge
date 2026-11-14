@@ -72,6 +72,17 @@ jobs:
             --enable-android-zlib \
             --enable-android-media-codec
 
+      - name: 上传编译日志（失败排查用）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-android
+          path: |
+            native/build.log
+            native/**/build.log
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: 拷贝进插件目录
         env:
           FFMPEG_KIT_PREBUILT_DIR: ${{ github.workspace }}/prebuilt
@@ -114,6 +125,17 @@ jobs:
           # 不是 ffmpeg 授权档位；授权档位由 <platform>.sh 的 --enable-gpl 等参数控制。
           mkdir -p "$PREBUILT"
           time bash "./nix-${{ matrix.platform }}.sh" --profile xcode26 -- "${{ inputs.profile }}"
+
+      - name: 上传编译日志（失败排查用）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ matrix.platform }}
+          path: |
+            native/build.log
+            native/**/build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: 拷贝进插件目录
         env:
@@ -158,6 +180,17 @@ jobs:
         run: |
           mkdir -p "$PREBUILT"
           time bash ./linux.sh
+
+      - name: 上传编译日志（失败排查用）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-linux-${{ matrix.arch }}
+          path: |
+            native/build.log
+            native/**/build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: 拷贝进插件目录
         env:
@@ -212,6 +245,17 @@ jobs:
         run: |
           mkdir -p "$PREBUILT"
           bash ./windows.sh --arch=${{ matrix.arch }}
+
+      - name: 上传编译日志（失败排查用）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-windows-${{ matrix.arch }}
+          path: |
+            native/build.log
+            native/**/build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: 拷贝进插件目录
         env:
