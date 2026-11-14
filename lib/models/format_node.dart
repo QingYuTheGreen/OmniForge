@@ -128,19 +128,33 @@ class ParamDef {
     this.options = const [],
   });
 
-  factory ParamDef.fromYaml(Map yaml) => ParamDef(
-        key: yaml['key'] ?? '',
-        type: ParamType.values.firstWhere(
-          (t) => t.name == (yaml['type'] ?? 'text').toString().toUpperCase(),
-          orElse: () => ParamType.text,
-        ),
+  factory ParamDef.fromYaml(Map yaml) {
+    final raw = (yaml['type'] ?? 'text').toString().toLowerCase();
+    return ParamDef(
+        key: yaml['key']?.toString() ?? '',
+        type: _parseType(raw),
         label: yaml['label'] ?? '',
         defaultValue: yaml['default']?.toString() ?? '',
         min: (yaml['min'] as num?)?.toDouble(),
         max: (yaml['max'] as num?)?.toDouble(),
         step: (yaml['step'] as num?)?.toDouble(),
         options: List<String>.from(yaml['options'] ?? []),
-      );
+    );
+  }
+
+  static ParamType _parseType(String raw) {
+    switch (raw) {
+      case 'slider':
+        return ParamType.slider;
+      case 'switch':
+        return ParamType.switch$;
+      case 'dropdown':
+      case 'select':
+        return ParamType.dropdown;
+      default:
+        return ParamType.text;
+    }
+  }
 }
 
 enum ParamType { slider, switch$, dropdown, text }
