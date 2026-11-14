@@ -21,7 +21,7 @@
 3. `flutter pub get`（国内可设 `PUB_HOSTED_URL=https://pub.flutter-io.cn`）
    → `flutter analyze`（期望 0 error）→ `flutter test` → 打包。
 4. 鸿蒙：`cd ohos && ohpm install` 后按 `docs/OHOS_FFMPEG.md` 构建；
-   其余平台音视频由 `ffmpeg_kit_flutter_new_full` 随包原生库提供。
+   其余平台音视频由 FFmpegKitNext（`third_party/ffmpeg_kit_next`）自编原生库提供。
 5. 插件能力（OCR / ASR / TTS / WOFF2 / PDF 渲染 / rar·7z）在设置页
    「转换插件」导入对应 `.so/.dll/.dylib` 后即可离线使用。
 

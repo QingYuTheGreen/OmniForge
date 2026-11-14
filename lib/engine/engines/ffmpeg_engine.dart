@@ -8,7 +8,7 @@ import 'ffmpeg_backend.dart';
 /// 音视频引擎。
 ///
 /// 所有转码都通过 [FfmpegBackend] 调用**原生库**（Android .so / Windows .dll /
-/// macOS .dylib，由 ffmpeg_kit_flutter_new 随包内置）完成；
+/// macOS .dylib，由 FFmpegKitNext 原生库提供）完成；
 /// 不使用命令行进程，不依赖系统安装的 ffmpeg。
 class FfmpegEngine implements IEngine {
   FfmpegEngine({FfmpegBackend backend = const NullFfmpegBackend()})

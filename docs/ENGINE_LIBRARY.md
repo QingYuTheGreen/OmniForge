@@ -17,7 +17,7 @@
 | 哈希 | `crypto` 3.x | 官方包，md5/sha1/sha256/sha512 |
 | Markdown → HTML | `markdown` 7.x | 官方包 |
 | CSV | `csv` 6.x | 社区标准 |
-| 音视频 | `ffmpeg_kit_flutter_new_full` 2.5.8 | 随包内置 LGPL FFmpeg 原生库（so/dll/dylib），跨 Android/iOS/macOS/Windows/Linux，不调用命令行 |
+| 音视频 | FFmpegKitNext v9.0.2（自编原生库） | 随包内置 LGPL FFmpeg 原生库（so/dll/dylib），跨 Android/iOS/macOS/Windows/Linux，不调用命令行 |
 
 ### 评估后放弃的库（避免踩坑）
 

@@ -11,7 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'engines/ffmpeg_backend.dart';
 import 'i_engine.dart';
 
-/// 基于 `ffmpeg_kit_flutter_new` 的原生音视频后端。
+/// 基于 FFmpegKitNext（`ffmpeg_kit_next_flutter`）的原生音视频后端。
 ///
 /// 该插件在 Android / iOS / macOS / Windows / Linux 上随包内置编译好的
 /// ffmpeg 原生库（Android 为 .so，Windows 为 .dll，macOS/iOS 为 .dylib /

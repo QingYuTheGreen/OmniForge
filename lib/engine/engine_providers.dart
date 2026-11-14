@@ -24,7 +24,7 @@ final nativePluginRegistryProvider = Provider<NativePluginRegistry>((ref) {
 
 /// 引擎注册表（应用层单例）。
 ///
-/// - 音视频引擎走平台原生库：桌面 / 移动端由 ffmpeg_kit_flutter_new 提供的
+/// - 音视频引擎走平台原生库：桌面 / 移动端由 FFmpegKitNext 提供的
 ///   原生 FFmpeg 库驱动，鸿蒙由 `@ohos/ffmpeg-kit` 的 NAPI 插件驱动，
 ///   全程不启动命令行进程；
 /// - 模型类能力（OCR / ASR / TTS / WOFF2 / PDF 渲染 / 扩展压缩包）

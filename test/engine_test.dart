@@ -7,7 +7,7 @@ import 'package:omniforge/engine/conversion_service.dart';
 import 'package:omniforge/engine/engine_registry.dart';
 import 'package:omniforge/engine/i_engine.dart';
 import 'package:omniforge/models/format_node.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:yaml/yaml.dart';
 
 void main() {

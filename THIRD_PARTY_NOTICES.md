@@ -3,13 +3,13 @@
 OmniForge 应用代码以 MIT 许可证发布。应用打包、链接或调用以下第三方组件，
 其许可证与义务一并列明。分发二进制时请保留本文件及对应许可证全文。
 
-## 1. FFmpeg（经 ffmpeg_kit_flutter_new_full 提供）
+## 1. FFmpeg（经 FFmpegKitNext 提供）
 
 - 用途：音视频解码 / 编码 / 转封装 / 抽帧 / 字幕抽取（`lib/engine/engines/ffmpeg_engine.dart`
   经 `lib/engine/ffmpeg_kit_backend.dart` 调用）。
 - 形式：随应用分发的预编译原生库（Android `.so`、Windows `.dll`、macOS/iOS `.dylib`/framework、
-  Linux `.so`），由 `ffmpeg_kit_flutter_new_full` 打包；应用**不调用 ffmpeg 命令行**。
-- 版本：FFmpeg 6.x（以 `ffmpeg_kit_flutter_new_full 2.5.8` 内置版本为准）。
+  Linux `.so`），由 FFmpegKitNext 自编并经 `third_party/ffmpeg_kit_next` 插件打包；应用**不调用 ffmpeg 命令行**。
+- 版本：FFmpeg 8.x（FFmpegKitNext v9.0.2 / FFmpeg 8.1.x 内核）。
 - 许可证：**LGPL v3**（所选为 full build 的 LGPL 变体，未启用 `--enable-gpl`）。
   - LGPL 文本：https://www.gnu.org/licenses/lgpl-3.0.html
   - FFmpeg 源码：https://ffmpeg.org/download.html

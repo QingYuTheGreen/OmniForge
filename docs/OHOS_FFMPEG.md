@@ -9,7 +9,7 @@
 
 ## 1. 背景与目标
 
-- Flutter 侧现有音视频能力由 `ffmpeg_kit_flutter_new_full`（ pub 插件）提供，见
+- Flutter 侧现有音视频能力由 FFmpegKitNext 提供，见
   `lib/engine/ffmpeg_kit_backend.dart`；其原生产物**不包含 OpenHarmony**。
 - 桌面/移动端继续使用该插件；只有 `Platform.operatingSystem == 'ohos'` 时切换到本方案。
 - 硬约束：不得 `Process.run` / 不得调用 shell / 不得依赖系统 `ffmpeg` 可执行文件。
@@ -28,7 +28,7 @@
 | 原生库 | `libs/arm64-v8a/libffmpegkit_napi.so`（另含 `libc++_shared.so`、`libomp.so`、`libomptarget.so`） |
 | 实现方式 | C++ 实现 + NAPI 绑定；ArkTS 侧是函数式 API（非对象式 `FFmpegKit` 类） |
 | 移植层许可 | 仓库 ADR/README 标注 MIT；har `oh-package.json5` 的 `license` 字段为 `LGPL-3.0`（见 §8） |
-| 内含 FFmpeg | LGPL v3（与现有 `ffmpeg_kit_flutter_new_full` 一致） |
+| 内含 FFmpeg | LGPL v3（与现有 FFmpegKitNext 一致） |
 | 已验证环境（上游 README） | DevEco Studio 6.0.0 Release、SDK API20、ROM 6.0.0.130 |
 
 > 注意：任务背景里过时的示例 `FFmpegKit.executeAsync(command, ...)` / `ReturnCode.isSuccess` /
@@ -183,7 +183,7 @@ libffmpegkit_napi.so → FFmpegKit 移植层 → libav*（解封装/解码/编�
   **LGPL-3.0**。二者不一致，保守做法是同时满足 MIT 与 LGPL 的署名/源码提供要求，
   并在升级该依赖时复核实际 LICENSE 文件。
 - **内含 FFmpeg**：LGPL v3（full build 未启用 `--enable-gpl`）。义务与现有
-  `ffmpeg_kit_flutter_new_full` 相同：动态库链接、可替换、随包附许可证文本与本声明、
+  FFmpegKitNext 相同：动态库链接、可替换、随包附许可证文本与本声明、
   提供对应源码获取途径、不移除版权声明。
 - 应用自身代码仍为 MIT；`THIRD_PARTY_NOTICES.md` §1.1 已列出本依赖。
 

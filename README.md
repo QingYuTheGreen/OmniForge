@@ -10,7 +10,7 @@ Flutter + Material 3，Android / Windows / macOS / Linux / iOS / 鸿蒙（OHOS�
 | --- | --- |
 | 图片 | jpg / png / webp / gif / bmp / tiff / ico / psd / exr 互转，缩放、质量参数，图片 → PDF |
 | 跨类型（图像侧） | 图片 → SVG 矢量描摹、图片 → 调色板（ase/aco/gpl/json）、图片 → docx 嵌图、任意图片 → ASCII / 盲文艺术 txt、图片 → 绣花文件（dst/pes/jef） |
-| 音频 / 视频 | 原生 FFmpeg 库（`ffmpeg_kit_flutter_new_full`）转码：mp4 / mkv / mov / avi / webm / mp3 / wav / flac / aac / m4a / ogg |
+| 音频 / 视频 | 原生 FFmpeg 库（FFmpegKitNext）转码：mp4 / mkv / mov / avi / webm / mp3 / wav / flac / aac / m4a / ogg |
 | 跨类型（音视频侧） | 视频 → GIF / 图片 / 内嵌字幕（srt）；音频 → 视频（波形封面）、音频 → 波形图 PNG、音频 → 频谱图 PNG、音频 → MIDI（自相关基频提取） |
 | 文档 | docx / rtf / html / md / txt 互转，文本 → PDF，PDF → 文本 |
 | 电子书 | epub ↔ txt / md / html（按 spine 顺序解析章节） |
@@ -63,7 +63,7 @@ lib/features/settings/     设置页 + 转换插件管理页（导入 / 卸载�
 
 ## 原生库与许可
 
-- 音视频转码通过 `ffmpeg_kit_flutter_new_full`（LGPL 版 FFmpeg full build）随包内置的
+- 音视频转码通过 `FFmpegKitNext（arthenica/ffmpeg-kit-next，官方延续版）内置的
   `.so` (Android) / `.dll` (Windows) / `.dylib` (macOS) 完成，经平台通道直接调用原生接口，
   **不启动 ffmpeg 命令行**，也不依赖用户机器上安装 FFmpeg。
 - 项目自身代码为 MIT；内置 FFmpeg 为 LGPL v3，分发时请保留其许可文本与源码获取方式
