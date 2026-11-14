@@ -10,17 +10,17 @@ on:
   workflow_call:
     inputs:
       profile:
-        description: 构建档位（lgpl / full-gpl 等，透传给 nix-*.sh 的 -p）
+        description: 构建档位（仅 Apple 的 nix-*.sh 使用，如 xcode26）
         type: string
         required: false
-        default: lgpl
+        default: xcode26
   workflow_dispatch:
     inputs:
       profile:
-        description: 构建档位（lgpl / full-gpl 等，透传给 nix-*.sh 的 -p）
+        description: 构建档位（仅 Apple 的 nix-*.sh 使用，如 xcode26）
         type: string
         required: false
-        default: lgpl
+        default: xcode26
 
 permissions:
   contents: read
@@ -31,6 +31,9 @@ env:
   # 插件仓库内路径（third_party 内置了 FFmpegKitNext 官方 flutter 插件源码）
   PLUGIN_DIR: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
   PREBUILT: ${{ github.workspace }}/prebuilt
+  # Linux / Windows / Android 用非 nix 脚本，没有 -p 选项：只按 LGPL 档位
+  # 编「默认启用的库」（不含需要 --enable-gpl 的库），即 LGPL 构建。
+  # Apple 的 nix-*.sh 需要 --profile，默认用 flake.nix 里的 xcode26。
 
 jobs:
   # ═══════════════════════════════════════
@@ -50,21 +53,22 @@ jobs:
             autoconf automake libtool pkg-config cmake meson ninja-build nasm yasm \
             gcc g++ make git curl unzip zip wget openjdk-17-jdk
 
-      - name: 安装 Android SDK / NDK
-        uses: android-actions/setup-android@v3
-
-      - name: 配置 ANDROID_SDK_ROOT / ANDROID_NDK_ROOT
+      - name: 准备 Android SDK / NDK
         run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-          sdkmanager --list_installed | head -20 || true
-          sdkmanager "ndk;27.0.12077973" >/dev/null
-          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
+          # ubuntu runner 自带 Android SDK；直接指定根目录，不去动 sdkmanager 本身
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          SDKM="$(ls /usr/local/lib/android/sdk/cmdline-tools/*/bin/sdkmanager | tail -1)"
+          echo "sdkmanager: $SDKM"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "ndk;27.3.13750724" > /dev/null
+          echo "ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/27.3.13750724" >> $GITHUB_ENV
 
-      - name: 编译 FFmpegKitNext（Android，${{ inputs.profile }}）
+      - name: 编译 FFmpegKitNext（Android，LGPL）
         working-directory: ${{ env.NATIVE_DIR }}
         run: |
           mkdir -p "$PREBUILT"
-          time bash ./android.sh -p "${{ inputs.profile }}" \
+          time bash ./android.sh \
             --enable-android-zlib \
             --enable-android-media-codec
 
@@ -97,11 +101,23 @@ jobs:
         run: |
           brew install pkg-config nasm yasm meson ninja cmake autoconf automake libtool
 
+      - name: 安装 nix（nix-*.sh 依赖 nix develop）
+        run: |
+          if ! command -v nix >/dev/null 2>&1; then
+            sh <(curl -L https://nixos.org/nix/install) --no-daemon --yes
+          fi
+          for f in /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh \
+                   "$HOME/.nix-profile/etc/profile.d/nix.sh"; do
+            if [ -f "$f" ]; then . "$f"; fi
+          done
+          command -v nix && nix --version
+          echo "/nix/var/nix/profiles/default/bin" >> $GITHUB_PATH
+
       - name: 编译 FFmpegKitNext（${{ matrix.platform }}，${{ inputs.profile }}）
         working-directory: ${{ env.NATIVE_DIR }}
         run: |
           mkdir -p "$PREBUILT"
-          time bash "./nix-${{ matrix.platform }}.sh" -p "${{ inputs.profile }}"
+          time bash "./nix-${{ matrix.platform }}.sh" --profile "${{ inputs.profile }}"
 
       - name: 拷贝进插件目录
         run: bash "$PLUGIN_DIR/copy_local_binaries.sh" ${{ matrix.platform }}
@@ -139,11 +155,11 @@ jobs:
             autoconf automake libtool pkg-config cmake meson ninja-build nasm yasm \
             gcc g++ make git curl unzip zip wget libjson-glib-dev
 
-      - name: 编译 FFmpegKitNext（Linux ${{ matrix.arch }}，${{ inputs.profile }}）
+      - name: 编译 FFmpegKitNext（Linux ${{ matrix.arch }}，LGPL）
         working-directory: ${{ env.NATIVE_DIR }}
         run: |
           mkdir -p "$PREBUILT"
-          time bash ./linux.sh -p "${{ inputs.profile }}"
+          time bash ./linux.sh
 
       - name: 拷贝进插件目录
         run: bash "$PLUGIN_DIR/copy_local_binaries.sh" linux
@@ -165,7 +181,7 @@ jobs:
       matrix:
         include:
           - runner: windows-latest
-            arch: x64
+            arch: x86-64
             msystem: CLANG64
           - runner: windows-11-arm
             arch: arm64
@@ -189,11 +205,11 @@ jobs:
             autoconf automake libtool pkgconf make nasm yasm cmake meson ninja
             diffutils patch python3
 
-      - name: 编译 FFmpegKitNext（Windows ${{ matrix.arch }}，${{ inputs.profile }}）
+      - name: 编译 FFmpegKitNext（Windows ${{ matrix.arch }}，LGPL）
         working-directory: ${{ env.NATIVE_DIR }}
         run: |
           mkdir -p "$PREBUILT"
-          bash ./windows.sh --arch=${{ matrix.arch }} --enable-lib-all
+          bash ./windows.sh --arch=${{ matrix.arch }}
 
       - name: 拷贝进插件目录
         run: bash "$PLUGIN_DIR/copy_local_binaries.sh" windows

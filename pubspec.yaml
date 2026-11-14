@@ -54,7 +54,8 @@ dependencies:
   # 压缩包 / tar.gz：纯 Dart
   archive: ^4.0.10
   # XML 读写（docx / epub / gpx / xlsx 等容器格式）
-  xml: ^7.1.0
+  # 7.1.0 需要 Dart ^3.13；鸿蒙 Flutter 3.44.9 自带 Dart 3.12.2，故锁 7.0.1（API 一致）
+  xml: 7.0.1
   # 哈希（md5 / sha1 / sha256 / sha512）
   crypto: ^3.0.6
   # Markdown → HTML
