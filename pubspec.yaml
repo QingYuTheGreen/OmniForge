@@ -48,6 +48,27 @@ dependencies:
   # 运行时切换桌面图标（Android activity-alias + iOS 备选图标）
   dynamic_app_icon_changer: ^0.0.3
 
+  # ── 转换引擎依赖（全部离线、无需联网；不调用任何命令行工具）──
+  # 图片编解码：纯 Dart 实现，Android/Windows/macOS/Linux/iOS 通用
+  image: ^4.5.4
+  # 压缩包 / tar.gz：纯 Dart
+  archive: ^4.0.10
+  # XML 读写（docx / epub / gpx / xlsx 等容器格式）
+  xml: ^7.1.0
+  # 哈希（md5 / sha1 / sha256 / sha512）
+  crypto: ^3.0.6
+  # Markdown → HTML
+  markdown: ^7.3.0
+  # PDF 生成（图片 / 文本 → PDF）
+  pdf: ^3.11.3
+  # CSV 读写
+  csv: ^6.0.0
+  # 路径处理
+  path: ^1.9.0
+  # 原生音视频库（LGPL 版 full build，随包内置 .so/.dll/.dylib，经平台通道直接
+  # 调用 libav* 原生接口；不使用 ffmpeg 命令行，也不依赖系统安装）
+  ffmpeg_kit_flutter_new_full: ^2.5.8
+
 # ── 官方适配分支之间互相打架的两处，统一版本源 ──
 dependency_overrides:
   # share_plus 的 platform_interface 把 path_provider 钉在

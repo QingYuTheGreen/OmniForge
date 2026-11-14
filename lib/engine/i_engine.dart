@@ -1,3 +1,12 @@
+/// 取消令牌：长任务（例如 ffmpeg 子进程）可轮询它提前结束。
+class CancelToken {
+  bool _cancelled = false;
+
+  bool get isCancelled => _cancelled;
+
+  void cancel() => _cancelled = true;
+}
+
 /// 转换上下文
 class EngineContext {
   final String inputPath;
@@ -5,11 +14,19 @@ class EngineContext {
   final String targetFormat;
   final Map<String, dynamic> params;
 
+  /// 输入格式 id（可选，部分引擎需要据此选择解析器）。
+  final String sourceFormat;
+
+  /// 取消令牌（可选）。
+  final CancelToken? cancelToken;
+
   EngineContext({
     required this.inputPath,
     required this.outputPath,
     required this.targetFormat,
     this.params = const {},
+    this.sourceFormat = '',
+    this.cancelToken,
   });
 }
 
@@ -37,7 +54,8 @@ class Error extends EngineProgress {
 class PluginRequired extends EngineProgress {
   final String pluginId;
   final int sizeMb;
-  const PluginRequired(this.pluginId, this.sizeMb);
+  final String? note;
+  const PluginRequired(this.pluginId, this.sizeMb, {this.note});
 }
 
 /// 统一引擎接口

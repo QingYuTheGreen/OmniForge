@@ -14,7 +14,7 @@ void main() {
 
     expect(catalog.types.length, 19, reason: '分类数');
     expect(catalog.uniqueFormatCount, 88, reason: '格式去重数');
-    expect(RegistryManager().isShellStage, true, reason: '空壳阶段');
+    expect(RegistryManager().isShellStage, false, reason: '真实转换阶段');
 
     // 每类都有格式、每类都有中文名
     for (final t in catalog.types) {
@@ -40,27 +40,21 @@ void main() {
     expect(mc, containsAll(['mcworld', 'mcpack', 'mcworld_java', 'mcpack_java']));
   });
 
-  testWidgets('配置页能渲染，类型下拉可列出 19 类', (tester) async {
+  testWidgets('配置页能渲染并识别输入格式行', (tester) async {
     await RegistryManager().initialize();
     await tester.pumpWidget(ProviderScope(
-      child: MaterialApp(home: ConfigPage(initialFilePath: '/tmp/omniforge_probe.png')),
+      child: MaterialApp(
+        home: ConfigPage(initialFilePath: '/tmp/omniforge_probe.png'),
+      ),
     ));
     await tester.pumpAndSettle();
 
     expect(find.text('转换配置'), findsOneWidget);
-    expect(find.text('输入类型'), findsOneWidget);
-    expect(find.text('输出格式'), findsOneWidget);
-    // 空壳提示
-    expect(find.textContaining('空壳阶段'), findsOneWidget);
-
-    // 点开输入类型，列表开头是「图像」
-    await tester.tap(find.text('输入类型'));
-    await tester.pumpAndSettle();
-    expect(find.text('图像'), findsWidgets);
-
-    // 滚到底能看到最后一类「我的世界专区」，说明 19 类都进了列表
-    await tester.drag(find.byType(ListView).last, const Offset(0, -3000));
-    await tester.pumpAndSettle();
-    expect(find.text('我的世界专区'), findsWidgets);
+    expect(find.text('输入格式'), findsOneWidget);
+    // 文件不存在时无法识别格式，应给出提示而不是崩溃
+    expect(find.textContaining('无法识别该文件'), findsOneWidget);
+    // 开始转换按钮在未选目标时禁用
+    final button = tester.widget<TextButton>(find.widgetWithText(TextButton, '开始转换'));
+    expect(button.onPressed, isNull);
   });
 }

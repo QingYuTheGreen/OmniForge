@@ -1,8 +1,15 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/output_paths.dart';
+
+import '../../engine/conversion_planner.dart';
+import '../../engine/conversion_service.dart';
+import '../../engine/engine_providers.dart';
+import '../../engine/i_engine.dart';
+import '../../registry/registry_manager.dart';
 import '../../utils/file_type_detector.dart';
+import '../../utils/output_paths.dart';
 
 // FormatOption / 格式目录统一定义在 registry/format_catalog.dart，这里转出，
 // 让原本 import home_provider 的地方继续能用。
@@ -26,6 +33,15 @@ class FileItem {
   /// 自动识别出的格式扩展名（如 png），未识别为 null
   final String? detectedFormat;
 
+  /// 目标格式 id（如 exif 中取到的 jpg → pdf）
+  final String? targetFormat;
+
+  /// 本次转换使用的参数（重试时复用）
+  final Map<String, dynamic> params;
+
+  /// 进度提示文字
+  final String message;
+
   const FileItem({
     required this.name,
     required this.path,
@@ -35,6 +51,9 @@ class FileItem {
     this.error,
     this.detectedType,
     this.detectedFormat,
+    this.targetFormat,
+    this.params = const {},
+    this.message = '',
   });
 
   FileItem copyWith({
@@ -44,6 +63,9 @@ class FileItem {
     String? error,
     String? detectedType,
     String? detectedFormat,
+    String? targetFormat,
+    Map<String, dynamic>? params,
+    String? message,
   }) {
     return FileItem(
       name: name,
@@ -54,6 +76,9 @@ class FileItem {
       error: error ?? this.error,
       detectedType: detectedType ?? this.detectedType,
       detectedFormat: detectedFormat ?? this.detectedFormat,
+      targetFormat: targetFormat ?? this.targetFormat,
+      params: params ?? this.params,
+      message: message ?? this.message,
     );
   }
 }
@@ -85,23 +110,47 @@ class HomeState {
 
 // ── Notifier ──
 class HomeNotifier extends StateNotifier<HomeState> {
-  Timer? _timer;
+  HomeNotifier(this._ref) : super(const HomeState());
 
-  HomeNotifier() : super(const HomeState());
+  final Ref _ref;
+  final Map<int, CancelToken> _tokens = {};
 
   void switchTab(int index) => state = state.copyWith(currentTab: index);
 
-  /// 开始处理（当前为模拟进度，真实转换引擎后续接入）
-  Future<void> startConvert(String filePath, {String? outputExt}) {
-    return _createAndRun(filePath, outputExt);
+  /// 源格式 id（根据扩展名 / 文件头推断），推断失败返回 null。
+  String? sourceFormatId(String filePath, String? detectedExt) {
+    final manager = RegistryManager();
+    if (detectedExt != null && detectedExt.isNotEmpty) {
+      final byExt = manager.getFormatByExtension(detectedExt);
+      if (byExt != null) return byExt.id;
+    }
+    final dot = filePath.lastIndexOf('.');
+    if (dot >= 0) {
+      final byExt = manager.getFormatByExtension(
+        filePath.substring(dot + 1).toLowerCase(),
+      );
+      if (byExt != null) return byExt.id;
+    }
+    return null;
   }
 
-  /// 建列表项的统一入口：先自动识别文件类型/格式，再启动处理
-  Future<void> _createAndRun(String filePath, String? outputExt) async {
+  /// 开始真实转换。
+  ///
+  /// [outputFormat] 为目标格式 id（来自 ConversionPlanner.reachableFrom）；
+  /// 为空时自动选择第一个可用的目标格式。
+  Future<void> startConvert(
+    String filePath, {
+    String? outputFormat,
+    Map<String, dynamic> params = const {},
+  }) async {
     final name = filePath.split(Platform.pathSeparator).last;
 
     // 自动识别（文件头魔数 + 扩展名），读不到文件时内部会降级
     final detected = await FileTypeDetector.detect(filePath);
+    final sourceId = sourceFormatId(
+      filePath,
+      detected.formatExt.isEmpty ? null : detected.formatExt,
+    );
 
     final item = FileItem(
       name: name,
@@ -109,76 +158,133 @@ class HomeNotifier extends StateNotifier<HomeState> {
       status: FileStatus.processing,
       detectedType: detected.isKnown ? detected.typeLabel : null,
       detectedFormat: detected.formatExt.isEmpty ? null : detected.formatExt,
+      targetFormat: outputFormat,
+      params: Map<String, dynamic>.from(params),
     );
 
-    state = state.copyWith(
-      files: [item, ...state.files],
-      currentTab: 1,
+    state = state.copyWith(files: [item, ...state.files], currentTab: 1);
+
+    if (sourceId == null) {
+      _fail(0, '无法识别输入格式，暂不支持该文件');
+      return;
+    }
+
+    final planner = _ref.read(conversionPlannerProvider);
+    final targets = planner.reachableFrom(sourceId);
+    final available = targets.where((t) => t.available).toList();
+    final targetId = outputFormat ?? (available.isEmpty ? null : available.first.formatId);
+    if (targetId == null) {
+      _fail(0, _unsupportedMessage(sourceId, targets));
+      return;
+    }
+
+    final plan = planner.plan(sourceId, targetId, params: params);
+    if (plan == null || plan.isEmpty) {
+      _fail(0, '没有从 $sourceId 到 $targetId 的转换链路');
+      return;
+    }
+
+    final ext = _planExtension(plan, targetId);
+    final outputPath = await OutputPaths.buildOutputPath(name, ext);
+
+    final updated = state.files[0].copyWith(
+      targetFormat: targetId,
+      params: Map<String, dynamic>.from(plan.steps.first.params),
     );
-    _runProcess(0, filePath, outputExt);
+    state = state.copyWith(files: [updated, ...state.files.skip(1)]);
+
+    _run(0, plan, filePath, outputPath);
   }
 
-  void _runProcess(int index, String inputPath, String? outputExt) {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 80), (timer) async {
-      final list = List<FileItem>.from(state.files);
-      if (index >= list.length) {
-        timer.cancel();
-        return;
-      }
+  void _run(
+    int index,
+    ConversionPlan plan,
+    String inputPath,
+    String outputPath,
+  ) {
+    final token = CancelToken();
+    _tokens[index] = token;
+    final service = _ref.read(conversionServiceProvider);
 
-      final next = list[index].progress + 0.02;
-
-      if (next >= 1.0) {
-        timer.cancel();
-        final ext = outputExt ?? _guessExt(inputPath);
-        final outPath = await OutputPaths.buildOutputPath(
-          inputPath.split(Platform.pathSeparator).last,
-          ext,
-        );
-        // 生成一个占位空文件，保证「分享 / 打开 / 详细信息」有真实对象可用
-        try {
-          final f = File(outPath);
-          if (!await f.exists()) {
-            await f.parent.create(recursive: true);
-            await f.writeAsBytes(const []);
-          }
-        } catch (e) {
-          final cur = List<FileItem>.from(state.files);
-          if (index < cur.length) {
-            cur[index] = cur[index].copyWith(
-              status: FileStatus.failed,
-              error: '输出失败：$e',
-            );
-            state = state.copyWith(files: cur);
-          }
-          return;
-        }
-
-        final cur = List<FileItem>.from(state.files);
-        if (index < cur.length) {
-          cur[index] = cur[index].copyWith(
-            status: FileStatus.completed,
-            progress: 1.0,
-            outputPath: outPath,
-          );
-          state = state.copyWith(files: cur);
-        }
-      } else {
-        list[index] = list[index].copyWith(progress: next);
-        state = state.copyWith(files: list);
-      }
-    });
+    service
+        .convert(
+          plan: plan,
+          inputPath: inputPath,
+          outputPath: outputPath,
+          cancelToken: token,
+        )
+        .listen((event) {
+          _update(index, (item) {
+            switch (event) {
+              case Progress():
+                return item.copyWith(
+                  progress: event.percent.clamp(0.0, 0.99),
+                  message: event.message,
+                );
+              case Success():
+                return item.copyWith(
+                  status: FileStatus.completed,
+                  progress: 1.0,
+                  outputPath: event.outputPath,
+                  message: '完成',
+                );
+              case Error():
+                return item.copyWith(
+                  status: FileStatus.failed,
+                  error: event.message,
+                );
+              case PluginRequired():
+                final note = event.note;
+                return item.copyWith(
+                  status: FileStatus.failed,
+                  error: '需要插件 ${event.pluginId}'
+                      '${event.sizeMb > 0 ? '（约 ${event.sizeMb} MB）' : ''}'
+                      '${note != null ? '：$note' : ''}',
+                );
+            }
+          });
+        })
+        .onDone(() {
+          _tokens.remove(index);
+        });
   }
 
-  String _guessExt(String path) {
-    final dot = path.lastIndexOf('.');
-    if (dot < 0) return 'gif';
-    return path.substring(dot + 1).toLowerCase();
+  void _update(int index, FileItem Function(FileItem item) transform) {
+    final list = List<FileItem>.from(state.files);
+    if (index >= list.length) return;
+    list[index] = transform(list[index]);
+    state = state.copyWith(files: list);
+  }
+
+  void _fail(int index, String message) {
+    _update(index, (item) => item.copyWith(
+          status: FileStatus.failed,
+          progress: 0,
+          error: message,
+        ));
+  }
+
+  String _planExtension(ConversionPlan plan, String targetId) {
+    for (final step in plan.steps.reversed) {
+      if (step.toExtension.isNotEmpty) return step.toExtension;
+    }
+    final format = RegistryManager().getFormatById(targetId);
+    if (format != null && format.extensions.isNotEmpty) {
+      return format.extensions.first.replaceFirst('.', '');
+    }
+    return targetId;
+  }
+
+  String _unsupportedMessage(String sourceId, List<ReachableTarget> targets) {
+    final blocked = targets.where((t) => !t.available).toList();
+    if (blocked.isEmpty) return '暂不支持从 $sourceId 转换为其它格式';
+    final plugin = blocked.first.blockedPluginId;
+    return '暂无可用的转换目标；部分目标需要插件 ${plugin ?? '未知'}';
   }
 
   void cancelConvert(int index) {
-    _timer?.cancel();
+    _tokens[index]?.cancel();
+    _tokens.remove(index);
     final list = List<FileItem>.from(state.files);
     if (index < list.length) list.removeAt(index);
     state = state.copyWith(files: list);
@@ -190,7 +296,11 @@ class HomeNotifier extends StateNotifier<HomeState> {
     final list = List<FileItem>.from(state.files);
     list.removeAt(index);
     state = state.copyWith(files: list);
-    startConvert(file.path);
+    startConvert(
+      file.path,
+      outputFormat: file.targetFormat,
+      params: file.params,
+    );
   }
 
   void removeFile(int index) {
@@ -201,11 +311,14 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   @override
   void dispose() {
-    _timer?.cancel();
+    for (final token in _tokens.values) {
+      token.cancel();
+    }
+    _tokens.clear();
     super.dispose();
   }
 }
 
 final homeProvider = StateNotifierProvider<HomeNotifier, HomeState>((ref) {
-  return HomeNotifier();
+  return HomeNotifier(ref);
 });
