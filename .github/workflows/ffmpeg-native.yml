@@ -99,9 +99,9 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: 安装依赖工具
+      - name: 检查 Xcode 版本
         run: |
-          brew install pkg-config nasm yasm meson ninja cmake autoconf automake libtool
+          xcodebuild -version
 
       - name: 安装 nix（nix-*.sh 依赖 nix develop）
         # 上游 nix 安装脚本已不支持 macOS 的 --no-daemon；用 DeterminateSystems 安装器
@@ -110,8 +110,10 @@ jobs:
       - name: 编译 FFmpegKitNext（${{ matrix.platform }}，${{ inputs.profile }}）
         working-directory: ${{ env.NATIVE_DIR }}
         run: |
+          # nix-<platform>.sh 的 -p/--profile 是 nix devShell 名（apple 平台只有 default / xcode26），
+          # 不是 ffmpeg 授权档位；授权档位由 <platform>.sh 的 --enable-gpl 等参数控制。
           mkdir -p "$PREBUILT"
-          time bash "./nix-${{ matrix.platform }}.sh" --profile "${{ inputs.profile }}"
+          time bash "./nix-${{ matrix.platform }}.sh" --profile xcode26 -- "${{ inputs.profile }}"
 
       - name: 拷贝进插件目录
         env:

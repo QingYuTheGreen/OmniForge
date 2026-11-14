@@ -102,11 +102,12 @@ copy_apple() {
 
 copy_linux() {
   local bundle src dest
-  bundle="${prebuilt_dir}/bundle-linux"
-  if [[ ! -d "${bundle}" ]]; then
-    echo "skip linux: no bundle-linux found in ${prebuilt_dir}" >&2
+  bundle="$(resolve_bundle 'bundle-linux*' || true)"
+  if [[ -z "${bundle}" ]]; then
+    echo "skip linux: no bundle-linux* found in ${prebuilt_dir}" >&2
     return 0
   fi
+  bundle="${bundle%/}"
   src="${bundle}/ffmpeg-kit-next"
   if [[ ! -f "${src}/lib/libffmpegkit.so" ]]; then
     echo "error: libffmpegkit.so not found in: ${src}/lib" >&2
@@ -122,12 +123,13 @@ copy_linux() {
 
 copy_windows() {
   local src dest
-  src="${prebuilt_dir}/bundle-windows/ffmpeg-kit-next"
-  dest="${plugin_dir}/windows/Frameworks/ffmpeg-kit-next"
-  if [[ ! -d "${src}" ]]; then
-    echo "skip windows: no bundle-windows/ffmpeg-kit-next found in ${prebuilt_dir}" >&2
+  src="$(resolve_bundle 'bundle-windows*' || true)"
+  if [[ -z "${src}" ]]; then
+    echo "skip windows: no bundle-windows* found in ${prebuilt_dir}" >&2
     return 0
   fi
+  src="${src%/}/ffmpeg-kit-next"
+  dest="${plugin_dir}/windows/Frameworks/ffmpeg-kit-next"
   if [[ ! -f "${src}/include/ffmpegkit_c.h" || ! -f "${src}/lib/ffmpegkit.lib" || ! -d "${src}/bin" ]]; then
     echo "error: incomplete Windows bundle: ${src}" >&2
     return 1
