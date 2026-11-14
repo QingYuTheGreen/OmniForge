@@ -93,15 +93,15 @@ formats:
     name: "JPG 图片"
     categories: ["image"]
     extensions: [".jpg", ".jpeg", ".jpe", ".jfif"]
-    accepts_from: ["image"]
-    engines: ["image"]
+    accepts_from: ["image", "model3d", "mesh"]
+    engines: ["image", "render3d"]
     status: ready
   - id: "png"
     name: "PNG 图片"
     categories: ["image"]
     extensions: [".png", ".apng"]
-    accepts_from: ["image"]
-    engines: ["image"]
+    accepts_from: ["image", "gps", "embroidery"]
+    engines: ["image", "geo_render", "embroidery"]
     status: ready
   - id: "webp"
     name: "WebP 图片"
@@ -121,9 +121,9 @@ formats:
     name: "SVG 矢量图"
     categories: ["image"]
     extensions: [".svg"]
-    accepts_from: ["image"]
-    engines: ["image"]
-    status: planned
+    accepts_from: ["image", "gps"]
+    engines: ["svg_vector", "geo_render"]
+    status: ready
   - id: "gif"
     name: "GIF 动图"
     categories: ["image"]
@@ -227,8 +227,8 @@ formats:
     categories: ["audio"]
     extensions: [".mid", ".midi"]
     accepts_from: ["audio"]
-    engines: ["midi"]
-    status: plugin
+    engines: ["audio_midi"]
+    status: ready
     params:
       - key: "vocal_mode"
         type: "radio"
@@ -347,8 +347,8 @@ formats:
     name: "Word 文档"
     categories: ["document"]
     extensions: [".docx", ".doc"]
-    accepts_from: ["document"]
-    engines: ["document"]
+    accepts_from: ["document", "image"]
+    engines: ["document", "image_doc"]
     status: ready
   - id: "md"
     name: "Markdown"
@@ -379,14 +379,14 @@ formats:
     extensions: [".pptx", ".ppt"]
     accepts_from: ["slides", "document"]
     engines: ["slides"]
-    status: plugin
+    status: ready
   - id: "odp"
     name: "ODP 演示"
     categories: ["slides"]
     extensions: [".odp"]
     accepts_from: ["slides"]
     engines: ["slides"]
-    status: plugin
+    status: ready
 
   # ── 7. 表格 ──
   - id: "xlsx"
@@ -426,14 +426,14 @@ formats:
     extensions: [".ttf"]
     accepts_from: ["font"]
     engines: ["font"]
-    status: plugin
+    status: ready
   - id: "otf"
     name: "OTF 字体"
     categories: ["font"]
     extensions: [".otf"]
     accepts_from: ["font"]
     engines: ["font"]
-    status: plugin
+    status: ready
   - id: "woff2"
     name: "WOFF2 字体"
     categories: ["font"]
@@ -441,6 +441,14 @@ formats:
     accepts_from: ["font"]
     engines: ["font"]
     status: plugin
+  - id: "woff"
+    name: "Web Open Font（WOFF 1.0）"
+    categories: ["font"]
+    extensions: [".woff"]
+    accepts_from: ["font"]
+    engines: ["font"]
+    status: ready
+    note: "WOFF1：zlib 压缩 + 表 checksum 重算，ttf/otf 无损往返"
   - id: "ufo"
     name: "UFO 源文件"
     categories: ["font"]
@@ -455,21 +463,21 @@ formats:
     categories: ["palette"]
     extensions: [".ase"]
     accepts_from: ["palette"]
-    engines: ["color"]
+    engines: ["color", "image_palette"]
     status: ready
   - id: "aco"
     name: "ACO 色板"
     categories: ["palette"]
     extensions: [".aco"]
     accepts_from: ["palette"]
-    engines: ["color"]
+    engines: ["color", "image_palette"]
     status: ready
   - id: "gpl"
     name: "GPL 色板"
     categories: ["palette"]
     extensions: [".gpl"]
     accepts_from: ["palette"]
-    engines: ["color"]
+    engines: ["color", "image_palette"]
     status: ready
 
   # ── 10. 3D 模型 ──
@@ -512,9 +520,9 @@ formats:
     name: "MC 基岩模型"
     categories: ["model3d"]
     extensions: [".geo.json", ".geo_json"]
-    accepts_from: ["model3d"]
-    engines: ["model3d"]
-    status: planned
+    accepts_from: ["model3d", "mesh"]
+    engines: ["model3d", "mesh_geo"]
+    status: ready
 
   # ── 11. 纹理 ──
   - id: "dds"
@@ -613,23 +621,23 @@ formats:
     name: "PES 绣花"
     categories: ["embroidery"]
     extensions: [".pes"]
-    accepts_from: ["embroidery"]
+    accepts_from: ["embroidery", "image"]
     engines: ["embroidery"]
-    status: plugin
+    status: ready
   - id: "dst"
     name: "DST 绣花"
     categories: ["embroidery"]
     extensions: [".dst"]
-    accepts_from: ["embroidery"]
+    accepts_from: ["embroidery", "image"]
     engines: ["embroidery"]
-    status: plugin
+    status: ready
   - id: "jef"
     name: "JEF 绣花"
     categories: ["embroidery"]
     extensions: [".jef"]
-    accepts_from: ["embroidery"]
+    accepts_from: ["embroidery", "image"]
     engines: ["embroidery"]
-    status: plugin
+    status: ready
 
   # ── 15. GPS ──
   - id: "gpx"
@@ -785,7 +793,164 @@ formats:
     status: ready
     note: "本质是 zip"
 
+  # ── 跨类型：图像 → 其它形态（PNG / TXT 目标，独立格式避免与普通图片冲突） ──
+  - id: "qr_png"
+    name: "二维码 PNG"
+    categories: ["image"]
+    extensions: [".png"]
+    accepts_from: ["*"]
+    engines: ["qr"]
+    status: ready
+    params:
+      - key: "size"
+        type: "slider"
+        label: "边长（像素）"
+        default: "512"
+        min: 64
+        max: 2048
+        step: 8
+      - key: "margin"
+        type: "slider"
+        label: "静区（模块）"
+        default: "4"
+        min: 0
+        max: 16
+        step: 1
+      - key: "ec"
+        type: "dropdown"
+        label: "纠错级别"
+        default: "M"
+        options: ["L", "M", "Q", "H"]
+  - id: "identicon_png"
+    name: "头像图标 PNG"
+    categories: ["image"]
+    extensions: [".png"]
+    accepts_from: ["*"]
+    engines: ["identicon"]
+    status: ready
+    params:
+      - key: "size"
+        type: "slider"
+        label: "边长（像素）"
+        default: "420"
+        min: 64
+        max: 1024
+        step: 4
+      - key: "margin"
+        type: "slider"
+        label: "边距"
+        default: "40"
+        min: 0
+        max: 200
+        step: 2
+      - key: "background"
+        type: "text"
+        label: "背景色"
+        default: "#ffffff"
+  - id: "ascii_art"
+    name: "ASCII 艺术 TXT"
+    categories: ["image"]
+    extensions: [".txt"]
+    accepts_from: ["image"]
+    engines: ["ascii_art"]
+    status: ready
+    params:
+      - key: "width"
+        type: "slider"
+        label: "字符宽度"
+        default: "100"
+        min: 20
+        max: 400
+        step: 5
+      - key: "charset"
+        type: "text"
+        label: "字符梯度"
+        default: " .:-=+*#%@"
+      - key: "invert"
+        type: "switch"
+        label: "反色"
+        default: "false"
+  - id: "braille_art"
+    name: "盲文艺术 TXT"
+    categories: ["image"]
+    extensions: [".txt"]
+    accepts_from: ["image"]
+    engines: ["ascii_art"]
+    status: ready
+    params:
+      - key: "width"
+        type: "slider"
+        label: "字符宽度"
+        default: "80"
+        min: 20
+        max: 300
+        step: 5
+      - key: "threshold"
+        type: "slider"
+        label: "二值阈值"
+        default: "128"
+        min: 0
+        max: 255
+        step: 1
+  - id: "waveform_png"
+    name: "音频波形 PNG"
+    categories: ["image"]
+    extensions: [".png"]
+    accepts_from: ["audio"]
+    engines: ["ffmpeg"]
+    status: ready
+    params:
+      - key: "width"
+        type: "slider"
+        label: "宽度"
+        default: "1200"
+        min: 200
+        max: 4096
+        step: 20
+      - key: "height"
+        type: "slider"
+        label: "高度"
+        default: "400"
+        min: 120
+        max: 2048
+        step: 10
+      - key: "background"
+        type: "text"
+        label: "背景色"
+        default: "#0f1115"
+      - key: "wave_color"
+        type: "text"
+        label: "波形颜色"
+        default: "#4ade80"
+  - id: "spectrogram_png"
+    name: "音频频谱 PNG"
+    categories: ["image"]
+    extensions: [".png"]
+    accepts_from: ["audio"]
+    engines: ["spectrogram"]
+    status: ready
+    params:
+      - key: "width"
+        type: "slider"
+        label: "宽度"
+        default: "800"
+        min: 200
+        max: 4096
+        step: 20
+      - key: "height"
+        type: "slider"
+        label: "高度"
+        default: "400"
+        min: 120
+        max: 2048
+        step: 10
+      - key: "background"
+        type: "text"
+        label: "背景色"
+        default: "#000000"
+
 flows:
+
   - name: "video_to_gif"
     source: ["mp4", "mkv", "mov", "avi", "webm"]
     target: ["gif"]
@@ -866,6 +1031,13 @@ flows:
     source: ["pptx", "odp"]
     target: ["pptx", "odp"]
     engine: "slides"
+  - name: "slides_to_text"
+    source: ["pptx", "odp"]
+    target: ["txt", "md", "html", "pdf"]
+    engine: "slides"
+    params:
+      - {key: "page_size", type: "dropdown", label: "页面尺寸", default: "a4", options: ["a4", "land", "wide", "a4l", "16:9"]}
+      - {key: "font_path", type: "text", label: "嵌入字体路径（可选）", default: ""}
   - name: "font_to_font"
     source: ["ttf", "otf", "woff2", "ufo"]
     target: ["ttf", "otf", "woff2", "ufo"]
@@ -920,3 +1092,132 @@ flows:
     source: ["mcworld", "mcworld_java"]
     target: ["mcworld", "mcworld_java"]
     engine: "minecraft"
+
+  # ── v0.8.0 跨类型扩展 ──
+  - name: "image_to_svg"
+    source: ["jpg", "png", "webp", "gif", "bmp", "tiff", "ico"]
+    target: ["svg"]
+    engine: "svg_vector"
+    params:
+      - {key: "max_size", type: "slider", label: "最长边", default: "512", min: 64, max: 2048, step: 16}
+      - {key: "colors", type: "slider", label: "颜色数", default: "16", min: 2, max: 64, step: 1}
+      - {key: "tolerance", type: "slider", label: "容差", default: "1.5", min: 0.1, max: 12, step: 0.1}
+  - name: "image_to_palette"
+    source: ["jpg", "png", "webp", "gif", "bmp", "tiff", "ico"]
+    target: ["ase", "aco", "gpl", "json"]
+    engine: "image_palette"
+    params:
+      - {key: "colors", type: "slider", label: "提取颜色数", default: "8", min: 1, max: 64, step: 1}
+  - name: "image_to_docx"
+    source: ["jpg", "png", "webp", "gif", "bmp", "tiff", "ico"]
+    target: ["docx"]
+    engine: "image_doc"
+    params:
+      - {key: "width", type: "slider", label: "宽度（0 为原图）", default: "0", min: 0, max: 2000, step: 10}
+      - {key: "align", type: "dropdown", label: "对齐", default: "center", options: ["left", "center", "right"]}
+      - {key: "caption", type: "text", label: "图注", default: ""}
+  - name: "model3d_to_image"
+    source: ["obj", "stl", "gltf", "glb"]
+    target: ["png", "jpg"]
+    engine: "render3d"
+    params:
+      - {key: "width", type: "slider", label: "宽度", default: "800", min: 64, max: 2048, step: 16}
+      - {key: "height", type: "slider", label: "高度", default: "600", min: 64, max: 2048, step: 16}
+      - {key: "rot_x", type: "slider", label: "绕 X 旋转", default: "25", min: -180, max: 180, step: 5}
+      - {key: "rot_y", type: "slider", label: "绕 Y 旋转", default: "30", min: -180, max: 180, step: 5}
+      - {key: "wireframe", type: "switch", label: "线框", default: "false"}
+  - name: "mesh_to_image"
+    source: ["ply", "off"]
+    target: ["png", "jpg"]
+    engine: "render3d"
+    params:
+      - {key: "width", type: "slider", label: "宽度", default: "800", min: 64, max: 2048, step: 16}
+      - {key: "height", type: "slider", label: "高度", default: "600", min: 64, max: 2048, step: 16}
+      - {key: "wireframe", type: "switch", label: "线框", default: "false"}
+  - name: "model3d_to_geojson"
+    source: ["obj", "stl", "gltf", "glb", "ply", "off"]
+    target: ["geo_json"]
+    engine: "mesh_geo"
+    params:
+      - {key: "rot_y", type: "slider", label: "绕 Y 旋转", default: "0", min: -180, max: 180, step: 5}
+  - name: "audio_to_waveform"
+    source: ["mp3", "wav", "flac", "aac", "m4a", "ogg"]
+    target: ["waveform_png"]
+    engine: "ffmpeg"
+    params:
+      - {key: "width", type: "slider", label: "宽度", default: "1200", min: 200, max: 4096, step: 20}
+      - {key: "height", type: "slider", label: "高度", default: "400", min: 120, max: 2048, step: 10}
+  - name: "audio_to_spectrogram"
+    source: ["mp3", "wav", "flac", "aac", "m4a", "ogg"]
+    target: ["spectrogram_png"]
+    engine: "spectrogram"
+    params:
+      - {key: "width", type: "slider", label: "宽度", default: "800", min: 200, max: 4096, step: 20}
+      - {key: "height", type: "slider", label: "高度", default: "400", min: 120, max: 2048, step: 10}
+  - name: "audio_to_video"
+    source: ["mp3", "wav", "flac", "aac", "m4a", "ogg", "midi"]
+    target: ["mp4", "mkv", "mov", "webm"]
+    engine: "ffmpeg"
+    params:
+      - {key: "width", type: "slider", label: "宽度", default: "1280", min: 240, max: 3840, step: 16}
+      - {key: "height", type: "slider", label: "高度", default: "720", min: 240, max: 2160, step: 16}
+      - {key: "background", type: "text", label: "背景色", default: "#101418"}
+  - name: "video_to_image"
+    source: ["mp4", "mkv", "mov", "avi", "webm", "flv"]
+    target: ["png", "jpg"]
+    engine: "ffmpeg"
+    params:
+      - {key: "start", type: "text", label: "截图时间", default: "0"}
+  - name: "audio_to_midi"
+    source: ["mp3", "wav", "flac", "aac", "m4a", "ogg"]
+    target: ["midi"]
+    engine: "audio_midi"
+    params:
+      - {key: "silence", type: "slider", label: "静音阈值", default: "0.01", min: 0, max: 0.5, step: 0.005}
+      - {key: "tempo", type: "slider", label: "BPM", default: "120", min: 40, max: 240, step: 1}
+  - name: "embroidery_to_image"
+    source: ["dst", "pes", "jef"]
+    target: ["png"]
+    engine: "embroidery"
+    params:
+      - {key: "scale", type: "slider", label: "每毫米像素", default: "2", min: 0.5, max: 12, step: 0.5}
+  - name: "image_to_embroidery"
+    source: ["png", "jpg"]
+    target: ["dst", "pes", "jef"]
+    engine: "embroidery"
+    params:
+      - {key: "threshold", type: "slider", label: "二值阈值", default: "128", min: 0, max: 255, step: 1}
+  - name: "gps_to_image"
+    source: ["gpx", "kml", "tcx", "geojson"]
+    target: ["png"]
+    engine: "geo_render"
+    params:
+      - {key: "width", type: "slider", label: "宽度", default: "1200", min: 200, max: 4096, step: 20}
+      - {key: "height", type: "slider", label: "高度", default: "800", min: 200, max: 4096, step: 20}
+      - {key: "stroke", type: "slider", label: "线宽", default: "3", min: 1, max: 20, step: 0.5}
+  - name: "gps_to_svg"
+    source: ["gpx", "kml", "tcx", "geojson"]
+    target: ["svg"]
+    engine: "geo_render"
+    params:
+      - {key: "width", type: "slider", label: "宽度", default: "1200", min: 200, max: 4096, step: 20}
+  - name: "text_to_tts"
+    source: ["txt", "md", "html"]
+    target: ["mp3", "wav"]
+    engine: "tts"
+  - name: "image_to_ocr"
+    source: ["jpg", "png", "webp", "bmp", "tiff"]
+    target: ["txt"]
+    engine: "ocr"
+  - name: "audio_to_asr"
+    source: ["mp3", "wav", "flac", "aac", "m4a", "ogg", "mp4", "mkv"]
+    target: ["txt", "srt"]
+    engine: "asr"
+  - name: "pdf_to_image"
+    source: ["pdf"]
+    target: ["png", "jpg"]
+    engine: "pdf_render"
+  - name: "archive_extract"
+    source: ["rar", "seven_z"]
+    target: ["zip"]
+    engine: "archive_pro"

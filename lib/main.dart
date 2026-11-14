@@ -1,19 +1,34 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'features/home/home_page.dart';
 import 'features/home/home_provider.dart';
 import 'features/settings/settings_provider.dart';
+import 'engine/engine_providers.dart';
 import 'registry/registry_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // 先把 assets/formats.yaml 全量读进注册中心，UI 的类型/格式级联全部来自这里
   await RegistryManager().initialize();
-  runApp(const ProviderScope(child: OmniForgeApp()));
+  // 插件安装根目录：应用可写数据目录（Android / iOS / 桌面均可用）
+  Directory pluginDir;
+  try {
+    pluginDir = await getApplicationSupportDirectory();
+  } catch (_) {
+    pluginDir = Directory.systemTemp;
+  }
+  runApp(
+    ProviderScope(
+      overrides: [pluginInstallDirProvider.overrideWithValue(pluginDir)],
+      child: const OmniForgeApp(),
+    ),
+  );
 }
 
 class OmniForgeApp extends ConsumerStatefulWidget {
@@ -26,26 +41,10 @@ class OmniForgeApp extends ConsumerStatefulWidget {
 class _OmniForgeAppState extends ConsumerState<OmniForgeApp> {
   StreamSubscription? _intentSub;
 
-  /// 设备是否支持动态取色（Android 12 / API 31 及以上），仅用于设置页提示
-  bool _dynamicSupported = false;
-
   @override
   void initState() {
     super.initState();
-    _checkAndroidVersion();
     _initIncomingFiles();
-  }
-
-  /// 读取安卓版本号，判断能不能用 Material You 动态取色
-  Future<void> _checkAndroidVersion() async {
-    try {
-      final info = await DeviceInfoPlugin().androidInfo;
-      if (!mounted) return;
-      setState(() => _dynamicSupported = info.version.sdkInt >= 31);
-    } catch (_) {
-      // 非 Android 平台（iOS / 桌面 / 鸿蒙）直接视为不支持
-      if (mounted) setState(() => _dynamicSupported = false);
-    }
   }
 
   /// 接收其他应用分享/打开过来的文件：只登记路径，由 HomePage 打开转换配置页
@@ -105,9 +104,10 @@ class _OmniForgeAppState extends ConsumerState<OmniForgeApp> {
         final ColorScheme darkScheme;
 
         if (useDynamic) {
-          // 这里 lightDynamic 一定非空（上面判断过），用 ! 显式断言
-          lightScheme = lightDynamic!.harmonized();
-          darkScheme = (darkDynamic ?? lightDynamic!).harmonized();
+          // 这里 lightDynamic 一定非空（上面判断过）
+          final light = lightDynamic;
+          lightScheme = light.harmonized();
+          darkScheme = (darkDynamic ?? light).harmonized();
         } else {
           lightScheme = ColorScheme.fromSeed(seedColor: settings.seedColor);
           darkScheme = ColorScheme.fromSeed(

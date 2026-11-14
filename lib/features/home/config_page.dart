@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../engine/conversion_planner.dart';
 import '../../engine/engine_providers.dart';
-import '../../engine/engine_registry.dart';
 import '../../models/format_node.dart';
 import '../../registry/registry_manager.dart';
 import '../../utils/file_type_detector.dart';

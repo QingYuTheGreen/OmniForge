@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:dynamic_app_icon_changer/dynamic_app_icon_changer.dart';
 import '../../utils/output_paths.dart';
 import 'settings_provider.dart';
+import 'plugin_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -309,6 +310,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   ),
                 ),
             ],
+          ]),
+          const SizedBox(height: 20),
+
+          // ── 转换插件 ──
+          _card(cs, [
+            Row(
+              children: [
+                Icon(Icons.extension_outlined, color: cs.primary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text('转换插件',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'OCR / 语音识别 / TTS / WOFF2 / PDF 渲染等能力由原生插件提供，'
+              '导入后完全离线运行；主转换能力无需插件。',
+              style: TextStyle(fontSize: 13, height: 1.5, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PluginPage()),
+                ),
+                icon: const Icon(Icons.extension_outlined),
+                label: const Text('管理转换插件'),
+              ),
+            ),
           ]),
         ],
       ),

@@ -111,8 +111,18 @@ class _Path {
 
   int get hops => edges.length;
 
-  /// 排序权值：先保证「无需插件」，再保证步数最少。
-  int get cost => unavailableCount * 100 + hops;
+  /// 排序权值：
+  /// 1. 先保证「无需插件」（缺引擎代价最大）；
+  /// 2. 再保证步数最少；
+  /// 3. 同跳数下优先走显式 flows 宣告的链路（语义最准确），
+  ///    避免把「pptx → txt」绕到「任意文件 → 二维码 PNG」这类万能边上。
+  int get cost {
+    var implicit = 0;
+    for (final edge in edges) {
+      if (!edge.explicit) implicit++;
+    }
+    return unavailableCount * 100 + hops * 10 + implicit * 2;
+  }
 }
 
 /// 转换规划器：在「格式 × 引擎」图上用 BFS/最短路找转换方案。
@@ -339,7 +349,7 @@ class ConversionPlanner {
   Map<String, dynamic> _defaults(List<ParamDef> defs) {
     final result = <String, dynamic>{};
     for (final def in defs) {
-      if (def.defaultValue != null) result[def.key] = def.defaultValue;
+      if (def.defaultValue.isNotEmpty) result[def.key] = def.defaultValue;
     }
     return result;
   }

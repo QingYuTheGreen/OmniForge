@@ -1,10 +1,22 @@
 
 import 'engines/archive_engine.dart';
+import 'engines/ascii_art_engine.dart';
+import 'engines/audio_midi_engine.dart';
 import 'engines/color_engine.dart';
 import 'engines/document_engine.dart';
 import 'engines/ebook_engine.dart';
 import 'engines/ffmpeg_backend.dart';
 import 'engines/ffmpeg_engine.dart';
+import 'engines/embroidery_engine.dart';
+import 'engines/font_engine.dart';
+import 'engines/geo_render_engine.dart';
+import 'engines/identicon_engine.dart';
+import 'engines/image_palette_engine.dart';
+import 'engines/image_doc_engine.dart';
+import 'engines/mesh_geo_engine.dart';
+import 'engines/mesh_render_engine.dart';
+import 'engines/native_plugin_engine.dart';
+import 'engines/palette_image_engine.dart';
 import 'engines/gps_engine.dart';
 import 'engines/hash_engine.dart';
 import 'engines/image_engine.dart';
@@ -13,13 +25,19 @@ import 'engines/minecraft_engine.dart';
 import 'engines/model3d_engine.dart';
 import 'engines/pdf_engine.dart';
 import 'engines/playlist_engine.dart';
+import 'engines/slides_engine.dart';
+import 'engines/qr_engine.dart';
+import 'engines/spectrogram_engine.dart';
 import 'engines/spreadsheet_engine.dart';
 import 'engines/subtitle_engine.dart';
+import 'engines/svg_vector_engine.dart';
 import 'engines/table_engine.dart';
 import 'engines/text_engine.dart';
 import 'engines/texture_engine.dart';
 import 'engine_utils.dart';
 import 'i_engine.dart';
+import 'plugin/native_plugin_registry.dart';
+import 'plugin/plugin_catalog.dart';
 
 /// 引擎可用状态：
 /// - [ready]：本机可直接转换
@@ -48,7 +66,13 @@ class EngineRegistry {
   ///
   /// [ffmpegBackend] 由应用层（lib/main.dart）注入原生库后端；
   /// 不注入时音视频转换会提示缺少原生库，而不会退化为命令行调用。
-  factory EngineRegistry.platformDefaults({FfmpegBackend? ffmpegBackend}) {
+  ///
+  /// [plugins] 由应用层注入（安装目录来自 path_provider）；不注入时
+  /// 插件类引擎不会被注册，相关目标在规划阶段即显示为需要插件。
+  factory EngineRegistry.platformDefaults({
+    FfmpegBackend? ffmpegBackend,
+    NativePluginRegistry? plugins,
+  }) {
     return EngineRegistry(<IEngine>[
       const HashEngine(),
       const SubtitleEngine(),
@@ -63,20 +87,30 @@ class EngineRegistry {
       const PdfEngine(),
       const ImageEngine(),
       const TextureEngine(),
+      const SvgVectorEngine(),
+      const ImagePaletteEngine(),
+      const PaletteImageEngine(),
+      const ImageDocEngine(),
+      const AsciiArtEngine(),
+      const QrEngine(),
+      const IdenticonEngine(),
       const MeshEngine(),
+      const MeshRenderEngine(),
+      const MeshGeoEngine(),
+      const GeoRenderEngine(),
+      const EmbroideryEngine(),
       const Model3DEngine(),
       const ArchiveEngine(),
       const MinecraftEngine(),
       FfmpegEngine(backend: ffmpegBackend ?? const NullFfmpegBackend()),
-      // ── 需要外部插件 / 二进制的引擎（诚实提示，不做假转换）──
-      const PluginEngine('font', pluginId: 'fonttools', sizeMb: 9,
-          note: '字体转换需要 fonttools 插件（woff2 需 brotli）'),
-      const PluginEngine('embroidery', pluginId: 'embroidery', sizeMb: 6,
-          note: '绣花格式转换需要绣花插件'),
-      const PluginEngine('midi', pluginId: 'midi', sizeMb: 14,
-          note: '音频转 MIDI 需要音高识别插件'),
-      const PluginEngine('slides', pluginId: 'libreoffice', sizeMb: 220,
-          note: '幻灯片转换需要 LibreOffice 插件'),
+      const SlidesEngine(),
+      const FontEngine(),
+      AudioMidiEngine(backend: ffmpegBackend ?? const NullFfmpegBackend()),
+      SpectrogramEngine(backend: ffmpegBackend ?? const NullFfmpegBackend()),
+      // ── 原生插件引擎：安装后可用，未安装时诚实提示 ──
+      if (plugins != null)
+        for (final manifest in PluginCatalog.builtIn)
+          NativePluginEngine(manifest: manifest, registry: plugins),
       // ── 私有加密格式：不做破解，明确提示 ──
       const PluginEngine('netease', pluginId: 'netease', sizeMb: 0,
           note: 'NCM 为网易云私有加密格式，OmniForge 不提供解密'),
@@ -102,6 +136,10 @@ class EngineRegistry {
     if (engine is FfmpegEngine && !engine.isAvailable) {
       return EngineReadiness.pluginRequired;
     }
+    if (engine is NativePluginEngine &&
+        engine.installState != PluginInstallState.installed) {
+      return EngineReadiness.pluginRequired;
+    }
     return EngineReadiness.ready;
   }
 
@@ -117,6 +155,9 @@ class EngineRegistry {
     }
     if (engine is FfmpegEngine && !engine.isAvailable) {
       return const PluginInfo('ffmpeg', 45);
+    }
+    if (engine is NativePluginEngine) {
+      return PluginInfo(engine.manifest.id, engine.manifest.sizeMb);
     }
     return null;
   }

@@ -312,8 +312,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
     }
 
-    // 枚举已全覆盖，这里只是兜底，保证函数一定 return
-    return const SizedBox.shrink();
   }
 
   /// 自动识别结果的小标签：类型 + 格式

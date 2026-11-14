@@ -1,4 +1,3 @@
-
 {
   "name": "entry",
   "version": "1.0.0",
@@ -6,6 +5,9 @@
   "main": "",
   "author": "",
   "license": "",
-  "dependencies": {},
+  "dependencies": {
+    // OmniForge：OpenHarmony 侧 FFmpeg 原生库（ohpm 包，NAPI + libav*）。
+    // 对应 lib/engine/ffmpeg_ohos_backend.dart 与 ets/plugins/FFmpegBridge.ets。
+    "@ohos/ffmpeg-kit": "1.0.1"
+  },
 }
-
