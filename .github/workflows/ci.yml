@@ -1,0 +1,56 @@
+name: 静态检查与单元测试
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: '3.47.9'
+  PUB_HOSTED_URL: https://pub.flutter-io.cn
+
+jobs:
+  quality:
+    name: analyze + test + 自检
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: 安装依赖
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            if flutter pub get; then exit 0; fi
+            echo "::warning::flutter pub get 第 $i 次失败，20 秒后重试"
+            sleep 20
+          done
+          exit 1
+
+      - name: 静态分析
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: 格式表结构自检
+        run: dart run tool/check_formats.dart
+
+      - name: 引擎与链路自检
+        run: dart run tool/check_engines.dart
+
+      - name: 单元测试
+        run: flutter test --reporter expanded

@@ -1,0 +1,29 @@
+--- src/x265/source/encoder/api.cpp
++++ src/x265/source/encoder/api.cpp
+@@ -1153,6 +1153,12 @@
+         else
+             return NULL;
+
++#if defined(__EMSCRIPTEN__)
++        /* FFmpegKit web dynamic builds link one static x265 archive. Do not try
++         * to dlopen native multilib names like libx265_main12.so in the browser. */
++        return NULL;
++#endif
++
+         const x265_api* api = NULL;
+         int reqDepth = 0;
+
+@@ -1242,6 +1248,13 @@
+             return NULL;
+         }
+
++#if defined(__EMSCRIPTEN__)
++        /* FFmpegKit web dynamic builds link one static x265 archive. Do not try
++         * to dlopen native multilib names like libx265_main12.so in the browser. */
++        if (err) *err = X265_API_QUERY_ERR_LIB_NOT_FOUND;
++        return NULL;
++#endif
++
+         const x265_api* api = NULL;
+         int reqDepth = 0;
+         int e = X265_API_QUERY_ERR_LIB_NOT_FOUND;

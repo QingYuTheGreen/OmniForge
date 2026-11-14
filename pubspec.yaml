@@ -65,9 +65,10 @@ dependencies:
   csv: ^6.0.0
   # 路径处理
   path: ^1.9.0
-  # 原生音视频库（LGPL 版 full build，随包内置 .so/.dll/.dylib，经平台通道直接
-  # 调用 libav* 原生接口；不使用 ffmpeg 命令行，也不依赖系统安装）
-  ffmpeg_kit_flutter_new_full: ^2.5.8
+  # 原生音视频能力：FFmpegKitNext 官方 Flutter 插件（源码内置 third_party，
+  # 原生库由 CI/本地脚本编译后拷入插件目录；不使用 ffmpeg 命令行，不依赖系统安装）
+  ffmpeg_kit_next_flutter:
+    path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
 
 # ── 官方适配分支之间互相打架的两处，统一版本源 ──
 dependency_overrides:

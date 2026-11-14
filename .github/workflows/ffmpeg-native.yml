@@ -1,0 +1,207 @@
+name: 原生库构建（FFmpegKitNext）
+
+# 为各平台编译 FFmpegKitNext 原生库，并拷贝进 third_party 插件目录，
+# 供「全平台打包」流水线下载使用。也可以单独手动触发，产物即插件目录本身。
+#
+# 说明：这里**只编译原生库**（libav* / ffmpeg-kit-next），不使用任何 ffmpeg 命令行；
+# 应用运行时同样通过平台通道直接调用原生库。
+
+on:
+  workflow_call:
+    inputs:
+      profile:
+        description: 构建档位（lgpl / full-gpl 等，透传给 nix-*.sh 的 -p）
+        type: string
+        required: false
+        default: lgpl
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 构建档位（lgpl / full-gpl 等，透传给 nix-*.sh 的 -p）
+        type: string
+        required: false
+        default: lgpl
+
+permissions:
+  contents: read
+
+env:
+  # FFmpegKitNext 原始源码（含 android.sh / windows.sh / nix-*.sh 构建脚本）放在 native/
+  NATIVE_DIR: ${{ github.workspace }}/native
+  # 插件仓库内路径（third_party 内置了 FFmpegKitNext 官方 flutter 插件源码）
+  PLUGIN_DIR: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
+  PREBUILT: ${{ github.workspace }}/prebuilt
+
+jobs:
+  # ═══════════════════════════════════════
+  # Android（本地 Maven 仓库形式的 AAR）
+  # ═══════════════════════════════════════
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake libtool pkg-config cmake meson ninja-build nasm yasm \
+            gcc g++ make git curl unzip zip wget openjdk-17-jdk
+
+      - name: 安装 Android SDK / NDK
+        uses: android-actions/setup-android@v3
+
+      - name: 配置 ANDROID_SDK_ROOT / ANDROID_NDK_ROOT
+        run: |
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+          sdkmanager --list_installed | head -20 || true
+          sdkmanager "ndk;27.0.12077973" >/dev/null
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
+
+      - name: 编译 FFmpegKitNext（Android，${{ inputs.profile }}）
+        working-directory: ${{ env.NATIVE_DIR }}
+        run: |
+          mkdir -p "$PREBUILT"
+          time bash ./android.sh -p "${{ inputs.profile }}" \
+            --enable-android-zlib \
+            --enable-android-media-codec
+
+      - name: 拷贝进插件目录
+        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" android
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-native-android
+          path: ${{ env.PLUGIN_DIR }}/android/libs-maven
+          retention-days: 30
+          if-no-files-found: error
+
+  # ═══════════════════════════════════════
+  # iOS / macOS（xcframework）
+  # ═══════════════════════════════════════
+  apple:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios, macos]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 安装依赖工具
+        run: |
+          brew install pkg-config nasm yasm meson ninja cmake autoconf automake libtool
+
+      - name: 编译 FFmpegKitNext（${{ matrix.platform }}，${{ inputs.profile }}）
+        working-directory: ${{ env.NATIVE_DIR }}
+        run: |
+          mkdir -p "$PREBUILT"
+          time bash "./nix-${{ matrix.platform }}.sh" -p "${{ inputs.profile }}"
+
+      - name: 拷贝进插件目录
+        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" ${{ matrix.platform }}
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-native-${{ matrix.platform }}
+          path: ${{ env.PLUGIN_DIR }}/${{ matrix.platform }}/ffmpeg_kit_next_flutter/Frameworks
+          retention-days: 30
+          if-no-files-found: error
+
+  # ═══════════════════════════════════════
+  # Linux x64 / ARM64（本机架构，分别在不同 runner 上编）
+  # ═══════════════════════════════════════
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: x64
+          - runner: ubuntu-22.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake libtool pkg-config cmake meson ninja-build nasm yasm \
+            gcc g++ make git curl unzip zip wget libjson-glib-dev
+
+      - name: 编译 FFmpegKitNext（Linux ${{ matrix.arch }}，${{ inputs.profile }}）
+        working-directory: ${{ env.NATIVE_DIR }}
+        run: |
+          mkdir -p "$PREBUILT"
+          time bash ./linux.sh -p "${{ inputs.profile }}"
+
+      - name: 拷贝进插件目录
+        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" linux
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-native-linux-${{ matrix.arch }}
+          path: ${{ env.PLUGIN_DIR }}/linux/Frameworks
+          retention-days: 30
+          if-no-files-found: error
+
+  # ═══════════════════════════════════════
+  # Windows x64 / ARM64（MSYS2 CLANG64 / CLANGARM64）
+  # ═══════════════════════════════════════
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            arch: x64
+            msystem: CLANG64
+          - runner: windows-11-arm
+            arch: arm64
+            msystem: CLANGARM64
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            base-devel git curl unzip zip
+            mingw-w64-clang-x86_64-toolchain
+            autoconf automake libtool pkgconf make nasm yasm cmake meson ninja
+            diffutils patch python3
+
+      - name: 编译 FFmpegKitNext（Windows ${{ matrix.arch }}，${{ inputs.profile }}）
+        working-directory: ${{ env.NATIVE_DIR }}
+        run: |
+          mkdir -p "$PREBUILT"
+          bash ./windows.sh --arch=${{ matrix.arch }} --enable-lib-all
+
+      - name: 拷贝进插件目录
+        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" windows
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-native-windows-${{ matrix.arch }}
+          path: ${{ env.PLUGIN_DIR }}/windows/Frameworks
+          retention-days: 30
+          if-no-files-found: error

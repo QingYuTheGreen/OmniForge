@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:ffmpeg_kit_flutter_new_full/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_full/ffmpeg_session.dart';
-import 'package:ffmpeg_kit_flutter_new_full/ffprobe_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_full/return_code.dart';
-import 'package:ffmpeg_kit_flutter_new_full/statistics.dart';
+import 'package:ffmpeg_kit_next_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_next_flutter/ffmpeg_session.dart';
+import 'package:ffmpeg_kit_next_flutter/ffprobe_kit.dart';
+import 'package:ffmpeg_kit_next_flutter/return_code.dart';
+import 'package:ffmpeg_kit_next_flutter/statistics.dart';
 import 'package:flutter/foundation.dart';
 
 import 'engines/ffmpeg_backend.dart';

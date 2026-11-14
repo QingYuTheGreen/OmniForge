@@ -23,15 +23,32 @@ env:
 
 jobs:
   # ═══════════════════════════════════════
+  # 0. 原生库：FFmpegKitNext 按平台编译（Linux x64/arm64、Windows x64/arm64、
+  #    Android、iOS、macOS），各构建 job 再按需拉取对应产物。
+  #    只编译原生库，不使用任何 ffmpeg 命令行。
+  # ═══════════════════════════════════════
+  native:
+    uses: ./.github/workflows/ffmpeg-native.yml
+    with:
+      profile: lgpl
+
+  # ═══════════════════════════════════════
   # 1. Android: ARM64 + ARMv7 + x86_64
   # ═══════════════════════════════════════
   android:
+    needs: native
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ${{ env.WORK_DIR }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: 拉取 FFmpegKitNext 原生库
+        uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-native-android
+          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/android/libs-maven
 
       - name: 安装 JDK 17
         uses: actions/setup-java@v4
@@ -82,6 +99,7 @@ jobs:
   # 2. Windows x64
   # ═══════════════════════════════════════
   windows-x64:
+    needs: native
     runs-on: windows-latest
     defaults:
       run:
@@ -90,6 +108,12 @@ jobs:
       CMAKE_GENERATOR: "Visual Studio 17 2022"
     steps:
       - uses: actions/checkout@v4
+
+      - name: 拉取 FFmpegKitNext 原生库（Windows x64）
+        uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-native-windows-x64
+          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/windows/Frameworks
 
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
@@ -136,12 +160,19 @@ jobs:
   # 2b. Windows ARM64
   # ═══════════════════════════════════════
   windows-arm64:
+    needs: native
     runs-on: windows-11-arm
     defaults:
       run:
         working-directory: ${{ env.WORK_DIR }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: 拉取 FFmpegKitNext 原生库（Windows ARM64）
+        uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-native-windows-arm64
+          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/windows/Frameworks
 
       - name: 安装 Flutter（官方无 Windows arm64 发行包，用源码方式）
         shell: bash
@@ -187,12 +218,27 @@ jobs:
   # 3. macOS: Universal (x64 + ARM64)
   # ═══════════════════════════════════════
   macos:
+    needs: native
     runs-on: macos-latest
     defaults:
       run:
         working-directory: ${{ env.WORK_DIR }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: 拉取 FFmpegKitNext 原生库（iOS + macOS）
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ffmpeg-native-{ios,macos}
+          path: /tmp/ffmpeg-native
+
+      - name: 放入插件目录
+        run: |
+          P=third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
+          mkdir -p "$P/ios/ffmpeg_kit_next_flutter/Frameworks" "$P/macos/ffmpeg_kit_next_flutter/Frameworks"
+          cp -R /tmp/ffmpeg-native/ffmpeg-native-ios/* "$P/ios/ffmpeg_kit_next_flutter/Frameworks/"
+          cp -R /tmp/ffmpeg-native/ffmpeg-native-macos/* "$P/macos/ffmpeg_kit_next_flutter/Frameworks/"
+          ls -R "$P/ios/ffmpeg_kit_next_flutter/Frameworks" | head -20
 
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
@@ -240,12 +286,19 @@ jobs:
   # 4a. Linux x64
   # ═══════════════════════════════════════
   linux-x64:
+    needs: native
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ${{ env.WORK_DIR }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: 拉取 FFmpegKitNext 原生库（Linux x64）
+        uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-native-linux-x64
+          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/linux/Frameworks
 
       - name: 安装系统依赖
         run: |
@@ -292,12 +345,19 @@ jobs:
   # 4b. Linux ARM64
   # ═══════════════════════════════════════
   linux-arm64:
+    needs: native
     runs-on: ubuntu-22.04-arm
     defaults:
       run:
         working-directory: ${{ env.WORK_DIR }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: 拉取 FFmpegKitNext 原生库（Linux ARM64）
+        uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-native-linux-arm64
+          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/linux/Frameworks
 
       - name: 安装系统依赖
         run: |
@@ -342,12 +402,19 @@ jobs:
   # 5. iOS: ARM64（无签名）
   # ═══════════════════════════════════════
   ios:
+    needs: native
     runs-on: macos-latest
     defaults:
       run:
         working-directory: ${{ env.WORK_DIR }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: 拉取 FFmpegKitNext 原生库（iOS）
+        uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-native-ios
+          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/ios/ffmpeg_kit_next_flutter/Frameworks
 
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
@@ -395,6 +462,7 @@ jobs:
   # 6. 鸿蒙 OHOS: HAP
   # ═══════════════════════════════════════
   ohos:
+    # 鸿蒙音视频走 @ohos/ffmpeg-kit，不依赖 FFmpegKitNext
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -505,13 +573,16 @@ jobs:
   # ═══════════════════════════════════════
   release:
     needs: [android, windows-x64, windows-arm64, macos, linux-x64, linux-arm64, ios, ohos]
-    if: startsWith(github.ref, 'refs/tags/v')
+    # 任一平台失败也照常发布其他平台产物（失败平台不会拖垮整轮发布）
+    if: always() && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: 下载所有产物
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: '*'
+          merge-multiple: false
 
       - name: 列出产物
         run: find artifacts -type f | head -50
