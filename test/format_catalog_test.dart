@@ -8,12 +8,12 @@ import 'package:omniforge/registry/format_catalog.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('注册表：19 类 / 88 种格式全部可加载', () async {
+  test('注册表：19 类 / 95 个格式条目全部可加载', () async {
     await RegistryManager().initialize();
     final catalog = FormatCatalog.fromRegistry();
 
     expect(catalog.types.length, 19, reason: '分类数');
-    expect(catalog.uniqueFormatCount, 88, reason: '格式去重数');
+    expect(catalog.uniqueFormatCount, 95, reason: '格式去重数');
     expect(RegistryManager().isShellStage, false, reason: '真实转换阶段');
 
     // 每类都有格式、每类都有中文名

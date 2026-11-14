@@ -91,7 +91,7 @@ void main() {
       ..writeAsStringSync('hello');
     final output = '${temp.path}/out.md5';
     final service = ConversionService(registry);
-    final plan = planner.plan('txt', 'md5', params: {'algorithm': 'sha1'});
+    final plan = planner.plan('txt', 'md5');
     expect(plan, isNotNull);
 
     final events = await service
@@ -99,7 +99,8 @@ void main() {
         .toList();
     expect(events.whereType<Success>(), isNotEmpty);
     final content = File(output).readAsStringSync();
-    expect(content.split(' ').first, 'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d');
+    // 'hello' 的 MD5（与 sha 的任何 algorithm 取值无关，md5 格式固定用 md5）
+    expect(content.split(' ').first, '5d41402abc4b2a76b9719d911017c592');
   });
 
   test('字幕引擎：srt → vtt 结构正确', () async {
