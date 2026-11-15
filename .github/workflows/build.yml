@@ -229,14 +229,15 @@ jobs:
       - name: 拉取 FFmpegKitNext 原生库（iOS + macOS）
         uses: actions/download-artifact@v4
         with:
-          # 原生库流水线把 iOS 与 macOS 的 Frameworks 合并成一个 artifact，
-          # 解压后即插件目录结构（ios/... 与 macos/...）
-          name: ffmpeg-native-apple
-          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
+          pattern: ffmpeg-native-{ios,macos}
+          path: /tmp/ffmpeg-native
 
-      - name: 检查插件原生框架
+      - name: 放入插件目录
         run: |
           P=third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
+          mkdir -p "$P/ios/ffmpeg_kit_next_flutter/Frameworks" "$P/macos/ffmpeg_kit_next_flutter/Frameworks"
+          cp -R /tmp/ffmpeg-native/ffmpeg-native-ios/* "$P/ios/ffmpeg_kit_next_flutter/Frameworks/"
+          cp -R /tmp/ffmpeg-native/ffmpeg-native-macos/* "$P/macos/ffmpeg_kit_next_flutter/Frameworks/"
           ls -R "$P/ios/ffmpeg_kit_next_flutter/Frameworks" | head -20
           ls -R "$P/macos/ffmpeg_kit_next_flutter/Frameworks" | head -20
 

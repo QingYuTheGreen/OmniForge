@@ -122,6 +122,7 @@ copy_linux() {
   cp -R "${src}/lib" "${dest}/lib"
   echo "linux: copied $(basename "${bundle}") -> linux/Frameworks/ffmpeg-kit-next/"
   ls "${dest}/lib" | head -40
+  rm -rf "${dest}/pkgconfig/probe" 2>/dev/null || true
 }
 
 copy_windows() {
@@ -160,6 +161,15 @@ for platform in "${platforms[@]}"; do
       exit 1
       ;;
   esac
+done
+
+# iOS 与 macOS 的 Frameworks 在插件里必须同时存在（打包流水线把它们合并成一个
+# artifact）：这里只做提示，缺失时给出明确说明，方便排查打包阶段的报错。
+for side in ios macos; do
+  fw="${plugin_dir}/${side}/ffmpeg_kit_next_flutter/Frameworks"
+  if [[ ! -d "${fw}" ]] || [[ -z "$(ls -A "${fw}" 2>/dev/null)" ]]; then
+    echo "note: ${side} Frameworks 为空（该平台尚未编译产物）" >&2
+  fi
 done
 
 echo "done."
