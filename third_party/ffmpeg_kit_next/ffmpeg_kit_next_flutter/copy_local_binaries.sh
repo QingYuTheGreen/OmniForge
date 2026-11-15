@@ -109,16 +109,19 @@ copy_linux() {
   fi
   bundle="${bundle%/}"
   src="${bundle}/ffmpeg-kit-next"
-  if [[ ! -f "${src}/lib/libffmpegkit.so" ]]; then
-    echo "error: libffmpegkit.so not found in: ${src}/lib" >&2
+  if [[ ! -d "${src}/lib" ]] || ! find "${src}/lib" -maxdepth 1 -name 'libffmpegkit*.so*' -print -quit | grep -q .; then
+    echo "error: no libffmpegkit*.so found in: ${src}/lib" >&2
+    ls -la "${src}" "${src}/lib" 2>&1 | head -40 >&2
     return 1
   fi
   dest="${plugin_dir}/linux/Frameworks/ffmpeg-kit-next"
   rm -rf "${dest}"
   mkdir -p "${dest}"
+  mkdir -p "${dest}"
   cp -R "${src}/include" "${dest}/include"
   cp -R "${src}/lib" "${dest}/lib"
-  echo "linux: copied bundle-linux -> linux/Frameworks/ffmpeg-kit-next/"
+  echo "linux: copied $(basename "${bundle}") -> linux/Frameworks/ffmpeg-kit-next/"
+  ls "${dest}/lib" | head -40
 }
 
 copy_windows() {
