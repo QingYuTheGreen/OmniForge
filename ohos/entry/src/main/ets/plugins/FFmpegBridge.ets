@@ -122,6 +122,13 @@ export default class FFmpegBridge implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+  /**
+   * FlutterPlugin 接口要求：插件唯一类名（用于引擎内插件去重）。
+   */
+  getUniqueClassName(): string {
+    return 'FFmpegBridge';
+  }
+
   onAttachedToEngine(binding: FlutterPluginBinding): void {
     try {
       this.channel = new MethodChannel(binding.getBinaryMessenger(), CHANNEL_NAME);
@@ -480,12 +487,12 @@ export default class FFmpegBridge implements FlutterPlugin, MethodCallHandler {
   // 工具
   // ---------------------------------------------------------------------
 
-  private invokeDart(method: string, arguments: ChannelArguments): void {
+  private invokeDart(method: string, args: ChannelArguments): void {
     if (this.channel == null) {
       return;
     }
     try {
-      this.channel.invokeMethod(method, arguments);
+      this.channel.invokeMethod(method, args);
     } catch (e) {
       hilog.warn(DOMAIN, TAG, `invokeMethod ${method} failed: ${e}`);
     }

@@ -130,10 +130,11 @@ jobs:
       - name: 编译 FFmpegKitNext（${{ matrix.platform }}，${{ inputs.profile }}）
         working-directory: ${{ env.NATIVE_DIR }}
         run: |
-          # nix-<platform>.sh 的 -p/--profile 只选 nix devShell（apple 侧只有 default / xcode26）。
-          # 默认就是 LGPL（不启用任何需要 --enable-gpl 的库），因此不再额外传档位参数。
+          # nix-<platform>.sh 的 -p/--profile 只选 nix devShell（apple 侧只有 default / xcode26）；
+          # 默认即 LGPL。`-x` 是 ios.sh/macos.sh 的 --xcframework：Flutter 插件要求
+          # Frameworks/ 下是 .xcframework（不带 -x 只会产出按架构的 .framework）。
           mkdir -p "$PREBUILT"
-          time bash "./nix-${{ matrix.platform }}.sh" --profile "${{ inputs.profile }}"
+          time bash "./nix-${{ matrix.platform }}.sh" --profile "${{ inputs.profile }}" -- -x
 
       - name: 上传编译日志（失败排查用）
         if: always()
