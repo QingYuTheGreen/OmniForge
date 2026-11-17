@@ -1,10 +1,11 @@
 
 {
+  // @ohos/ffmpeg-kit 是字节码 HAR：鸿蒙工具链要求工程级打开
+  // useNormalizedOHMUrl（顶层字段，不能放在 app 节点内，否则 schema 校验
+  // 报 00303038 Configuration Error），否则生成 loader 时报告 00306046。
+  "useNormalizedOHMUrl": true,
   "app": {
     "signingConfigs": [],
-    // @ohos/ffmpeg-kit 是字节码 HAR：鸿蒙工具链要求工程级打开
-    // useNormalizedOHMUrl，否则生成 loader 时报告 00306046 规范限制错误。
-    "useNormalizedOHMUrl": true,
     "products": [
       {
         "name": "default",

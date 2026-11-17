@@ -30,7 +30,9 @@ jobs:
   native:
     uses: ./.github/workflows/ffmpeg-native.yml
     with:
-      profile: lgpl
+      # Apple 侧的原生库构建走 nix-<platform>.sh，其 --profile 选的是 flake.nix 里的
+      # devShell（只有 default / xcode26），不是 FFmpeg 授权档位；默认构建即 LGPL。
+      profile: xcode26
 
   # ═══════════════════════════════════════
   # 1. Android: ARM64 + ARMv7 + x86_64

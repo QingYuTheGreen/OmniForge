@@ -10,14 +10,14 @@ on:
   workflow_call:
     inputs:
       profile:
-        description: Apple 的 nix devShell 名（flake.nix 里只有 default / xcode26）
+        description: Apple 的 nix devShell 名（flake.nix 里只有 default/xcode26；默认即 LGPL）
         type: string
         required: false
         default: xcode26
   workflow_dispatch:
     inputs:
       profile:
-        description: Apple 的 nix devShell 名（flake.nix 里只有 default / xcode26）
+        description: Apple 的 nix devShell 名（flake.nix 里只有 default/xcode26；默认即 LGPL）
         type: string
         required: false
         default: xcode26
@@ -30,7 +30,8 @@ env:
   NATIVE_DIR: ${{ github.workspace }}/native
   # 插件仓库内路径（third_party 内置了 FFmpegKitNext 官方 flutter 插件源码）
   PLUGIN_DIR: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
-  PREBUILT: ${{ github.workspace }}/prebuilt
+  # 原生构建脚本以 native/ 为 BASEDIR，产物 bundle 落在 native/prebuilt/
+  PREBUILT: ${{ github.workspace }}/native/prebuilt
   # Linux / Windows / Android 用非 nix 脚本，没有 -p 选项：只按 LGPL 档位
   # 编「默认启用的库」（不含需要 --enable-gpl 的库），即 LGPL 构建。
   # Apple 的 nix-*.sh 需要 --profile，默认用 flake.nix 里的 xcode26。
@@ -91,8 +92,10 @@ jobs:
 
       - name: 拷贝进插件目录
         env:
-          FFMPEG_KIT_PREBUILT_DIR: ${{ github.workspace }}/prebuilt
-        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" android
+          FFMPEG_KIT_PREBUILT_DIR: ${{ env.NATIVE_DIR }}/prebuilt
+        run: |
+          echo "prebuilt: $FFMPEG_KIT_PREBUILT_DIR"; ls "$FFMPEG_KIT_PREBUILT_DIR" || true
+          bash "$PLUGIN_DIR/copy_local_binaries.sh" android
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
@@ -145,8 +148,10 @@ jobs:
 
       - name: 拷贝进插件目录
         env:
-          FFMPEG_KIT_PREBUILT_DIR: ${{ github.workspace }}/prebuilt
-        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" ${{ matrix.platform }}
+          FFMPEG_KIT_PREBUILT_DIR: ${{ env.NATIVE_DIR }}/prebuilt
+        run: |
+          echo "prebuilt: $FFMPEG_KIT_PREBUILT_DIR"; ls "$FFMPEG_KIT_PREBUILT_DIR" || true
+          bash "$PLUGIN_DIR/copy_local_binaries.sh" ${{ matrix.platform }}
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
@@ -200,8 +205,10 @@ jobs:
 
       - name: 拷贝进插件目录
         env:
-          FFMPEG_KIT_PREBUILT_DIR: ${{ github.workspace }}/prebuilt
-        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" linux
+          FFMPEG_KIT_PREBUILT_DIR: ${{ env.NATIVE_DIR }}/prebuilt
+        run: |
+          echo "prebuilt: $FFMPEG_KIT_PREBUILT_DIR"; ls "$FFMPEG_KIT_PREBUILT_DIR" || true
+          bash "$PLUGIN_DIR/copy_local_binaries.sh" linux
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
@@ -264,9 +271,13 @@ jobs:
           retention-days: 7
 
       - name: 拷贝进插件目录
-        env:
-          FFMPEG_KIT_PREBUILT_DIR: ${{ github.workspace }}/prebuilt
-        run: bash "$PLUGIN_DIR/copy_local_binaries.sh" windows
+        # MSYS2 下的 bash 不认 "D:\a\..." 形式的 Windows 路径，
+        # 这里用 cygpath 把 GITHUB_WORKSPACE 转成 /d/a/... 再拼 prebuilt。
+        run: |
+          export FFMPEG_KIT_PREBUILT_DIR="$(cygpath -u "$GITHUB_WORKSPACE")/native/prebuilt"
+          echo "prebuilt: $FFMPEG_KIT_PREBUILT_DIR"
+          ls "$FFMPEG_KIT_PREBUILT_DIR" || true
+          bash "$PLUGIN_DIR/copy_local_binaries.sh" windows
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
