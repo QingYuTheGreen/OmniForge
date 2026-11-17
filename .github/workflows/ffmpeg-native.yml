@@ -113,7 +113,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ios, macos]
+        include:
+          # iOS 上游默认编 6 种架构（arm64/arm64e/arm64-simulator + 两种 mac-catalyst + x86-64），
+          # 在 6 小时任务上限内跑不完 XCFramework 打包；只保留设备与 Apple Silicon 模拟器。
+          - platform: ios
+            extra_args: '--arch=arm64,arm64e,arm64-simulator'
+          - platform: macos
+            extra_args: '' 
     steps:
       - uses: actions/checkout@v4
         with:
@@ -134,7 +140,7 @@ jobs:
           # 默认即 LGPL。`-x` 是 ios.sh/macos.sh 的 --xcframework：Flutter 插件要求
           # Frameworks/ 下是 .xcframework（不带 -x 只会产出按架构的 .framework）。
           mkdir -p "$PREBUILT"
-          time bash "./nix-${{ matrix.platform }}.sh" --profile "${{ inputs.profile }}" -- -x
+          time bash "./nix-${{ matrix.platform }}.sh" --profile "${{ inputs.profile }}" -- -x ${{ matrix.extra_args }}
 
       - name: 上传编译日志（失败排查用）
         if: always()
