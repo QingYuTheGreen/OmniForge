@@ -1,9 +1,5 @@
 
 {
-  // @ohos/ffmpeg-kit 是字节码 HAR：鸿蒙工具链要求工程级打开
-  // useNormalizedOHMUrl（顶层字段，不能放在 app 节点内，否则 schema 校验
-  // 报 00303038 Configuration Error），否则生成 loader 时报告 00306046。
-  "useNormalizedOHMUrl": true,
   "app": {
     "signingConfigs": [],
     "products": [
@@ -11,6 +7,14 @@
         "name": "default",
         "compatibleSdkVersion": "26.0.0",
         "runtimeOS": "HarmonyOS",
+        // @ohos/ffmpeg-kit 是字节码 HAR：产品级 buildOption.strictMode 打开
+        // useNormalizedOHMUrl，否则 GenerateLoaderJson 报 00306046；工程级
+        // app 顶层不接受该字段（只允许 signingConfigs/products/...）。
+        "buildOption": {
+          "strictMode": {
+            "useNormalizedOHMUrl": true
+          }
+        },
       }
     ],
     "buildModeSet": [

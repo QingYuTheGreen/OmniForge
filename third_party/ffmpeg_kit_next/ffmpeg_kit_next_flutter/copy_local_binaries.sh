@@ -8,9 +8,9 @@
 #
 #   Android : prebuilt/bundle-android-aar-*-maven/  (a local Maven repository)
 #               -> android/libs-maven/
-#   iOS     : prebuilt/bundle-apple-xcframework-ios-*/*.xcframework
+#   iOS     : prebuilt/bundle-apple-framework-ios-*/*.xcframework
 #               -> ios/ffmpeg_kit_next_flutter/Frameworks/
-#   macOS   : prebuilt/bundle-apple-xcframework-macos-*/*.xcframework
+#   macOS   : prebuilt/bundle-apple-framework-macos-*/*.xcframework
 #               -> macos/ffmpeg_kit_next_flutter/Frameworks/
 #   Linux   : prebuilt/bundle-linux/ffmpeg-kit-next/{include,lib}
 #               -> linux/Frameworks/ffmpeg-kit-next/
@@ -152,8 +152,8 @@ fi
 for platform in "${platforms[@]}"; do
   case "${platform}" in
     android) copy_android ;;
-    ios)     copy_apple ios   'bundle-apple-xcframework-ios-*'   ios ;;
-    macos)   copy_apple macos 'bundle-apple-xcframework-macos-*' macos ;;
+    ios)     copy_apple ios   'bundle-apple-framework-ios-*'   ios ;;
+    macos)   copy_apple macos 'bundle-apple-framework-macos-*' macos ;;
     linux)   copy_linux ;;
     windows) copy_windows ;;
     *)
