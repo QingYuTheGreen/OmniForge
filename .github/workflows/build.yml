@@ -591,7 +591,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: '*'
+          # 只要打包产物；原生库 tar.gz 是打包阶段的中间件，不进 Release
+          pattern: '!ffmpeg-native-*'
           merge-multiple: false
 
       - name: 列出产物

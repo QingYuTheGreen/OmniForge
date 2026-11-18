@@ -2,6 +2,24 @@
 
 > 给接手的 AI：这是**增量包**，按「怎么用」覆盖到对应基线即可，不要单独构建它。
 
+## 〇、v0.11.0 全平台发布状态（2026-11-18）
+
+- GitHub Actions「全平台打包」run `44405638931`（tag `v0.11.0`）**全部 job 成功**：
+  `native/{android,apple-ios,apple-macos,linux-x64,linux-arm64,windows-x64,windows-arm64}` 原生库编译 ✓，
+  `android`、`ios`、`macos`、`windows-x64`、`windows-arm64`、`linux-x64`、`linux-arm64`、`ohos` 打包 ✓，
+  `release` ✓。GitHub Release 资产 12 个：3×APK、IPA、macOS zip、Windows x64/arm64 zip、
+  Linux x64/arm64 tar.gz、鸿蒙 HAP。
+- 关键修复（都在 CI 配置里，代码层此前已就绪）：
+  1. 原生库脚本以 `native/` 为 BASEDIR，产物在 `native/prebuilt/`，`FFMPEG_KIT_PREBUILT_DIR` 必须指向它；
+  2. Apple 必须传 `-x`（`--xcframework`），且 `--profile` 是 nix devShell 名（`xcode26`），不是授权档位；
+     iOS 只编 `arm64,arm64e,arm64-simulator`（上游默认 6 架构会超 6 小时任务上限）；
+  3. xcframework 内符号链接在 artifact 传输中丢失 → Apple 产物改 tar.gz 传输，打包端解包；
+  4. Gradle 解析传递依赖只用消费方（`:app`）仓库 → `android/build.gradle` 增加 CI 产出的 `libs-maven`；
+  5. 鸿蒙 `useNormalizedOHMUrl` 位于 `products[].buildOption.strictMode`（工程级顶层只允许 app/modules）；
+  6. `FFmpegBridge.ets` 遵守 ArkTS 严格模式（形参不能叫 `arguments`）并补齐 `getUniqueClassName()`；
+  7. Android 原生库构建跳过上游 SAF 单元测试（Robolectric/ASM 版本不兼容，与产物无关）；
+  8. Windows x64 artifact 名统一为 `windows-x64`。
+
 ## 一、这个包是什么
 
 - 工程：OmniForge（Flutter 跨平台文件转换器，`com.file.omniforge.app`）

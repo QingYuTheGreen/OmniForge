@@ -69,6 +69,21 @@ lib/features/settings/     设置页 + 转换插件管理页（导入 / 卸载�
 - 项目自身代码为 MIT；内置 FFmpeg 为 LGPL v3，分发时请保留其许可文本与源码获取方式
   （详见 `THIRD_PARTY_NOTICES.md`）。
 
+## 发布产物
+
+`v0.11.0` 起，推 `v*` tag 会触发「全平台打包」流水线，先由
+`.github/workflows/ffmpeg-native.yml` 为各平台编译 FFmpegKitNext 原生库，
+再分别构建并汇总到 GitHub Release：
+
+| 平台 | 产物 |
+| --- | --- |
+| Android | `omniforge-{arm64-v8a,armeabi-v7a,x86_64}-release.apk`（按 ABI 拆分） |
+| Windows | `omniforge-windows-{x64,arm64}.zip` |
+| macOS | `omniforge-macos-universal.zip`（x64 + ARM64） |
+| Linux | `omniforge-linux-{x64,arm64}.tar.gz` |
+| iOS | `omniforge-ios-arm64-unsigned.ipa` |
+| 鸿蒙 | `entry-default-unsigned.hap` |
+
 ## 构建
 
 ```bash
