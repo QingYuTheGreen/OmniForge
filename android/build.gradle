@@ -2,6 +2,15 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+
+        // FFmpegKitNext 不用远程 Maven 产物：原生库由 CI 编译后以本地 Maven
+        // 仓库形式放在插件目录（third_party/.../android/libs-maven）。
+        // Gradle 解析传递依赖时只用「消费方」（:app）声明过的仓库，所以这里
+        // 必须把该本地仓库加到所有工程，插件自己 android/build.gradle 里的
+        // exclusiveContent 只对插件内部配置生效。
+        maven {
+            url = uri("${rootProject.projectDir}/../third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/android/libs-maven")
+        }
     }
 }
 

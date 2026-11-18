@@ -160,11 +160,19 @@ jobs:
           echo "prebuilt: $FFMPEG_KIT_PREBUILT_DIR"; ls "$FFMPEG_KIT_PREBUILT_DIR" || true
           bash "$PLUGIN_DIR/copy_local_binaries.sh" ${{ matrix.platform }}
 
+      - name: 打包产物（tar 保留符号链接）
+        # xcframework 里的 .framework/Versions/Current 等是符号链接；
+        # actions/upload-artifact 传输时不保留符号链接，会导致打包阶段
+        # codesign 报 "code object is not signed at all"。先打 tar 再上传。
+        run: |
+          cd "${{ env.PLUGIN_DIR }}/${{ matrix.platform }}/ffmpeg_kit_next_flutter"
+          tar -czf "$RUNNER_TEMP/ffmpeg-native-${{ matrix.platform }}.tar.gz" Frameworks
+
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: ffmpeg-native-${{ matrix.platform }}
-          path: ${{ env.PLUGIN_DIR }}/${{ matrix.platform }}/ffmpeg_kit_next_flutter/Frameworks
+          path: ${{ runner.temp }}/ffmpeg-native-${{ matrix.platform }}.tar.gz
           retention-days: 30
           if-no-files-found: error
 
@@ -235,10 +243,12 @@ jobs:
         include:
           - runner: windows-latest
             arch: x86-64
+            artifact: x64
             msystem: CLANG64
             toolchain: mingw-w64-clang-x86_64-toolchain
           - runner: windows-11-arm
             arch: arm64
+            artifact: arm64
             msystem: CLANGARM64
             toolchain: mingw-w64-clang-aarch64-toolchain
     runs-on: ${{ matrix.runner }}
@@ -289,7 +299,7 @@ jobs:
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: ffmpeg-native-windows-${{ matrix.arch }}
+          name: ffmpeg-native-windows-${{ matrix.artifact }}
           path: ${{ env.PLUGIN_DIR }}/windows/Frameworks
           retention-days: 30
           if-no-files-found: error

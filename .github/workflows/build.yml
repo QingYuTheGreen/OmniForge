@@ -234,14 +234,14 @@ jobs:
           pattern: ffmpeg-native-{ios,macos}
           path: /tmp/ffmpeg-native
 
-      - name: 放入插件目录
+      - name: 放入插件目录（解 tar 保留符号链接）
         run: |
           P=third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
-          mkdir -p "$P/ios/ffmpeg_kit_next_flutter/Frameworks" "$P/macos/ffmpeg_kit_next_flutter/Frameworks"
-          cp -R /tmp/ffmpeg-native/ffmpeg-native-ios/* "$P/ios/ffmpeg_kit_next_flutter/Frameworks/"
-          cp -R /tmp/ffmpeg-native/ffmpeg-native-macos/* "$P/macos/ffmpeg_kit_next_flutter/Frameworks/"
-          ls -R "$P/ios/ffmpeg_kit_next_flutter/Frameworks" | head -20
-          ls -R "$P/macos/ffmpeg_kit_next_flutter/Frameworks" | head -20
+          mkdir -p "$P/ios/ffmpeg_kit_next_flutter" "$P/macos/ffmpeg_kit_next_flutter"
+          tar -xzf /tmp/ffmpeg-native/ffmpeg-native-ios/ffmpeg-native-ios.tar.gz -C "$P/ios/ffmpeg_kit_next_flutter"
+          tar -xzf /tmp/ffmpeg-native/ffmpeg-native-macos/ffmpeg-native-macos.tar.gz -C "$P/macos/ffmpeg_kit_next_flutter"
+          ls "$P/ios/ffmpeg_kit_next_flutter/Frameworks" | head -20
+          ls "$P/macos/ffmpeg_kit_next_flutter/Frameworks" | head -20
 
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
@@ -417,7 +417,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ffmpeg-native-ios
-          path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/ios/ffmpeg_kit_next_flutter/Frameworks
+          path: /tmp/ffmpeg-native-ios
+
+      - name: 解包原生库（保留符号链接）
+        run: |
+          P=third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter/ios/ffmpeg_kit_next_flutter
+          mkdir -p "$P"
+          tar -xzf /tmp/ffmpeg-native-ios/ffmpeg-native-ios.tar.gz -C "$P"
+          ls "$P/Frameworks" | head -20
 
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
