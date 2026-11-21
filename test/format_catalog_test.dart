@@ -40,7 +40,7 @@ void main() {
     expect(mc, containsAll(['mcworld', 'mcpack', 'mcworld_java', 'mcpack_java']));
   });
 
-  testWidgets('配置页能渲染并识别输入格式行', (tester) async {
+  testWidgets('配置页保持四行选择项格式', (tester) async {
     await RegistryManager().initialize();
     await tester.pumpWidget(ProviderScope(
       child: MaterialApp(
@@ -50,11 +50,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('转换配置'), findsOneWidget);
+    // 保持 v0.6.0 的四行选择项格式
+    expect(find.text('输入类型'), findsOneWidget);
     expect(find.text('输入格式'), findsOneWidget);
-    // 文件不存在时无法识别格式，应给出提示而不是崩溃
-    expect(find.textContaining('无法识别该文件'), findsOneWidget);
-    // 开始转换按钮在未选目标时禁用
-    final button = tester.widget<TextButton>(find.widgetWithText(TextButton, '开始转换'));
+    expect(find.text('输出类型'), findsOneWidget);
+    expect(find.text('输出格式'), findsOneWidget);
+    expect(find.text('高级选项'), findsOneWidget);
+    // 「完毕」按钮在未选目标时禁用
+    final button = tester.widget<TextButton>(find.widgetWithText(TextButton, '完毕'));
     expect(button.onPressed, isNull);
   });
 }
