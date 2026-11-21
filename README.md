@@ -2,7 +2,7 @@
 
 100% 离线、跨平台的万能文件转换器。19 大类、95 个格式条目、36 个转换引擎
 （31 个零依赖纯 Dart 引擎 + 原生 FFmpeg 库 + 可选原生插件），支持直转与多跳链路。
-Flutter + Material 3，Android / Windows / macOS / Linux / iOS / 鸿蒙（OHOS）全平台。
+Flutter + Material 3，Android / Windows / macOS / Linux / iOS 全平台。
 
 ## 功能
 
@@ -51,7 +51,6 @@ lib/engine/
     text_format.dart        HTML / Markdown / 纯文本互转工具
   ffmpeg_backend.dart      原生库抽象（FfmpegBackend + NullFfmpegBackend）
   ffmpeg_kit_backend.dart  Android / iOS / macOS / Windows / Linux 原生 FFmpeg 实现
-  ffmpeg_ohos_backend.dart 鸿蒙 @ohos/ffmpeg-kit NAPI 桥接
   plugin/                  原生插件清单 / 安装注册表（动态库 + 统一 ABI）
   engines/                 35 个纯 Dart 引擎 + 1 个原生 FFmpeg 引擎 + 6 个插件引擎：
                            图像 / 纹理 / 3D 渲染 / 网格 / 文档 / 表格 / 电子书 / PDF /
@@ -82,7 +81,6 @@ lib/features/settings/     设置页 + 转换插件管理页（导入 / 卸载�
 | macOS | `omniforge-macos-universal.zip`（x64 + ARM64） |
 | Linux | `omniforge-linux-{x64,arm64}.tar.gz` |
 | iOS | `omniforge-ios-arm64-unsigned.ipa` |
-| 鸿蒙 | `entry-default-unsigned.hap` |
 
 ## 构建
 

@@ -15,7 +15,7 @@ class PluginManifest {
   /// 安装包/插件体积（MB），用于下载确认框展示。
   final int sizeMb;
 
-  /// 支持平台（小写，规范化后）：android/ios/windows/macos/linux/ohos。
+  /// 支持平台（小写，规范化后）：android/ios/windows/macos/linux。
   final List<String> platforms;
 
   /// 该插件负责实现的引擎 id，例如 `['ocr']`。
@@ -79,7 +79,7 @@ class PluginManifest {
   }
 
   /// 指定平台应使用的库文件名：
-  /// - android / linux / ohos → `libomniforge_<id>.so`
+  /// - android / linux → `libomniforge_<id>.so`
   /// - windows → `omniforge_<id>.dll`
   /// - ios / macos → `libomniforge_<id>.dylib`
   ///

@@ -12,29 +12,11 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.6
   yaml: ^3.1.2
-  # ── 以下 4 个为 CPF-Flutter 官方 OpenHarmony 适配版（git 依赖，自带 ohos 原生实现）──
-  # path_provider：官方 federated 插件，CPF monorepo 内
-  path_provider:
-    git:
-      url: https://gitcode.com/CPF-Flutter/flutter_packages.git
-      path: packages/path_provider/path_provider
-      ref: br_path_provider-v2.1.5_ohos
-  # file_picker：社区适配版，保留原包名 file_picker
-  file_picker:
-    git:
-      url: https://gitcode.com/CPF-Flutter/fluttertpc_file_picker.git
-      ref: br_v8.0.7_ohos
-  # open_filex：社区适配版
-  open_filex:
-    git:
-      url: https://gitcode.com/CPF-Flutter/fluttertpc_open_filex.git
-      ref: br_v4.7.0_ohos
-  # share_plus：社区适配版（monorepo 子目录；Dart API 仍是 Share.shareXFiles）
-  share_plus:
-    git:
-      url: https://gitcode.com/CPF-Flutter/flutter_plus_plugins.git
-      path: packages/share_plus/share_plus
-      ref: br_share_plus-v10.1.1_ohos
+  # 文件 / 目录 / 分享 / 打开：均为 pub.dev 官方包
+  path_provider: ^2.1.5
+  file_picker: ^8.1.2
+  open_filex: ^4.7.0
+  share_plus: ^10.1.1
   window_manager: ^0.3.8
   flutter_riverpod: ^2.5.1
   # 动态取色（Material You，仅 Android 12+ 生效，其他平台自动返回 null）
@@ -54,7 +36,7 @@ dependencies:
   # 压缩包 / tar.gz：纯 Dart
   archive: ^4.0.10
   # XML 读写（docx / epub / gpx / xlsx 等容器格式）
-  # 7.1.0 需要 Dart ^3.13；鸿蒙 Flutter 3.44.9 自带 Dart 3.12.2，故锁 7.0.1（API 一致）
+  # 锁定 7.0.1：兼容当前 CI 的 Flutter/Dart 版本，API 与 7.1.0 一致
   xml: 7.0.1
   # 哈希（md5 / sha1 / sha256 / sha512）
   crypto: ^3.0.6
@@ -70,21 +52,6 @@ dependencies:
   # 原生库由 CI/本地脚本编译后拷入插件目录；不使用 ffmpeg 命令行，不依赖系统安装）
   ffmpeg_kit_next_flutter:
     path: third_party/ffmpeg_kit_next/ffmpeg_kit_next_flutter
-
-# ── 官方适配分支之间互相打架的两处，统一版本源 ──
-dependency_overrides:
-  # share_plus 的 platform_interface 把 path_provider 钉在
-  # openharmony-sig/flutter_packages ref master，与上面的 CPF-Flutter 分支同为 git 源但
-  # url/ref 不同，pub 会判定冲突；这里强制统一到同一条 2.1.5_ohos 分支。
-  path_provider:
-    git:
-      url: https://gitcode.com/CPF-Flutter/flutter_packages.git
-      path: packages/path_provider/path_provider
-      ref: br_path_provider-v2.1.5_ohos
-  # share_plus 依赖的 url_launcher_web 要求 web ^1.x，file_picker 8.0.7 要求 web ^0.5.x。
-  # 本项目不构建 web（CI 只出 apk/windows/macos/linux/ios/hap），web 平台代码不会被编译，
-  # 统一到 1.x 即可，file_picker 的 web 实现不参与任何实际构建。
-  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:

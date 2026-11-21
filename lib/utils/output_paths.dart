@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 /// Windows:   D:\OmniForge\（无 D 盘则 用户目录\OmniForge）
 /// macOS:     ~/OmniForge/
 /// Linux:     ~/OmniForge/
-/// iOS / OHOS: 沙盒目录/OmniForge/（系统不允许写公共目录）
+/// iOS: 沙盒目录/OmniForge/（系统不允许写公共目录）
 class OutputPaths {
   static Directory? _cache;
 
@@ -31,7 +31,7 @@ class OutputPaths {
       final docs = await getApplicationDocumentsDirectory();
       dir = Directory('${docs.path}/OmniForge');
     } else {
-      // OHOS 及其他：path_provider 鸿蒙适配版，落到应用沙箱临时目录
+      // 其他平台：落到应用沙箱临时目录
       final temp = await getTemporaryDirectory();
       dir = Directory('${temp.path}/OmniForge');
     }

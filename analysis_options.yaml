@@ -10,7 +10,6 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
-    - ohos/**
     - native/**
     # 内置的 FFmpegKitNext 官方插件源码（上游代码，不按本项目 lint 规则要求）
     - third_party/**

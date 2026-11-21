@@ -6,7 +6,7 @@ import '../registry/registry_manager.dart';
 import 'conversion_planner.dart';
 import 'conversion_service.dart';
 import 'engine_registry.dart';
-import 'ffmpeg_backend_factory.dart';
+import 'ffmpeg_kit_backend.dart';
 import 'plugin/native_plugin_registry.dart';
 
 /// 插件安装根目录（应用可写数据目录，由 main.dart 用 path_provider 注入）。
@@ -24,14 +24,13 @@ final nativePluginRegistryProvider = Provider<NativePluginRegistry>((ref) {
 
 /// 引擎注册表（应用层单例）。
 ///
-/// - 音视频引擎走平台原生库：桌面 / 移动端由 FFmpegKitNext 提供的
-///   原生 FFmpeg 库驱动，鸿蒙由 `@ohos/ffmpeg-kit` 的 NAPI 插件驱动，
-///   全程不启动命令行进程；
+/// - 音视频引擎走平台原生库：由 FFmpegKitNext 编译出的原生 FFmpeg 库
+///   驱动（Android / iOS / macOS / Windows / Linux），全程不启动命令行进程；
 /// - 模型类能力（OCR / ASR / TTS / WOFF2 / PDF 渲染 / 扩展压缩包）
 ///   由用户导入的原生插件提供，未安装时对应引擎返回 PluginRequired。
 final engineRegistryProvider = Provider<EngineRegistry>((ref) {
   return EngineRegistry.platformDefaults(
-    ffmpegBackend: createPlatformFfmpegBackend(),
+    ffmpegBackend: FfmpegKitBackend(),
     plugins: ref.watch(nativePluginRegistryProvider),
   );
 });

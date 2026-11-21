@@ -11,14 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 安装 CPF-Flutter 鸿蒙 SDK
-        run: |
-          # 注意：不能用 --depth 1 浅克隆，否则 git describe 拿不到版本号，
-          # Flutter 会识别成 0.0.0-unknown，导致 pub get 依赖解析失败
-          git clone https://gitcode.com/CPF-Flutter/flutter_flutter.git /opt/flutter_ohos
-          echo "/opt/flutter_ohos/bin" >> $GITHUB_PATH
-          chmod +x /opt/flutter_ohos/bin/flutter
-          chmod +x /opt/flutter_ohos/bin/dart
+      - name: 安装 Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
 
       - name: 验证 Flutter 版本
         run: |
@@ -26,7 +23,7 @@ jobs:
           flutter --version
           flutter config --no-analytics
 
-      - name: 生成其他平台骨架
+      - name: 生成各平台骨架
         run: |
           flutter config --enable-windows-desktop --enable-macos-desktop --enable-linux-desktop
           flutter create . \
@@ -34,28 +31,15 @@ jobs:
             --org com.omniforge.app \
             --platforms=android,ios,web,windows,macos,linux
 
-      - name: 生成鸿蒙工程骨架（占位 SDK）
-        continue-on-error: true
-        run: |
-          # 生成 ohos 骨架时 flutter create 会检查 HOS_SDK_HOME，
-          # 这里给个空目录占位，只用于生成工程目录模板，不真正编译
-          mkdir -p /opt/hos-sdk
-          echo "HOS_SDK_HOME=/opt/hos-sdk" >> $GITHUB_ENV
-          echo "OHOS_SDK_HOME=/opt/hos-sdk" >> $GITHUB_ENV
-          flutter create . \
-            --project-name omniforge \
-            --org com.omniforge.app \
-            --platforms=ohos
-
       - name: 生成结果
         run: |
           echo "=== 平台目录 ==="
-          ls -d android ios web windows macos linux ohos 2>/dev/null || true
+          ls -d android ios web windows macos linux 2>/dev/null || true
 
       - name: 提交更改
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Auto-generate all Flutter platform folders (including HarmonyOS)" || echo "No changes to commit"
+          git commit -m "Auto-generate Flutter platform folders" || echo "No changes to commit"
           git push

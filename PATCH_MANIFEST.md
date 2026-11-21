@@ -1,8 +1,29 @@
-# PATCH_MANIFEST — OmniForge 增量包（v0.9.0 · FFmpegKitNext 原生库 + 多平台流水线）
+# PATCH_MANIFEST — OmniForge 增量包（v0.12.0 · 移除鸿蒙平台 + UI 还原 v0.6.0）
 
 > 给接手的 AI：这是**增量包**，按「怎么用」覆盖到对应基线即可，不要单独构建它。
 
-## 〇、v0.11.0 全平台发布状态（2026-11-18）
+## 〇、v0.12.0 变更（2026-11-21）
+
+> 主题：**不再支持鸿蒙（OHOS）平台，相关代码与流水线全部移除**；音视频继续使用内置的
+> FFmpegKitNext 原生库（编译进应用，非插件、不调用命令行）。同时把转换配置页还原为 v0.6.0 的界面。
+
+移除内容：
+1. 删除 `ohos/` 平台工程目录（315 KB，含 `entry/src/main/ets/plugins/FFmpegBridge.ets`）。
+2. 删除 `lib/engine/ffmpeg_ohos_backend.dart`（MethodChannel NAPI 桥接）与
+   `lib/engine/ffmpeg_backend_factory.dart`；`engine_providers.dart` 直接用 `FfmpegKitBackend()`。
+3. 删除 `docs/OHOS_FFMPEG.md`；`THIRD_PARTY_NOTICES.md` 删除 §1.1 `@ohos/ffmpeg-kit` 条目。
+4. `.github/workflows/build.yml`：删除 `ohos` job（HarmonyOS commandline-tools 21 分卷下载 + OHOS Flutter SDK），
+   `release.needs` 去掉 `ohos`；打包平台变为 Android / Windows x64+arm64 / macOS / Linux x64+arm64 / iOS。
+5. `.github/workflows/init-flutter.yml`：改用官方 `subosito/flutter-action`，只生成 Android/iOS/Web/Windows/macOS/Linux 骨架。
+6. `analysis_options.yaml` 去掉 `ohos/**` 排除项。
+7. `pubspec.yaml`：path_provider / file_picker / open_filex / share_plus 从 CPF-Flutter 的 `_ohos`
+   git 分支改回 pub.dev 官方包（`^2.1.5` / `^8.1.2` / `^4.7.0` / `^10.1.1`）；
+   `dependency_overrides`（鸿蒙分支冲突的 path_provider 与 web 覆盖）整段删除。
+8. README / PATCH_MANIFEST / 源码注释中的鸿蒙表述清理。
+
+保留：FFmpegKitNext 仍为**内置**方案（`third_party/` 源码 + CI 编译产物），没有改成插件。
+
+## 〇.1、v0.11.0 全平台发布状态（2026-11-18，历史记录，含当时仍支持的鸿蒙）
 
 - GitHub Actions「全平台打包」run `44405638931`（tag `v0.11.0`）**全部 job 成功**：
   `native/{android,apple-ios,apple-macos,linux-x64,linux-arm64,windows-x64,windows-arm64}` 原生库编译 ✓，
@@ -23,7 +44,7 @@
 ## 一、这个包是什么
 
 - 工程：OmniForge（Flutter 跨平台文件转换器，`com.file.omniforge.app`）
-- **增量基线：commit `58707d4`（v0.8.0，跨类型矩阵 + 原生插件 + 鸿蒙）**
+- **增量基线：commit `58707d4`（v0.8.0，跨类型矩阵 + 原生插件）**
 - 内容：基线 → 当前状态的全部差异
 - 生成时间：2026-11-14
 - 本轮主题：**把音视频后端换成 FFmpegKitNext**——因为旧依赖
@@ -45,7 +66,7 @@
 2. 把本包文件覆盖到工程根目录（结构与工程一致）。
 3. `flutter pub get`（国内可设 `PUB_HOSTED_URL=https://pub.flutter-io.cn`）
    → `flutter analyze`（期望 0 error）→ `flutter test` → 打包。
-4. 鸿蒙：`cd ohos && ohpm install` 后按 `docs/OHOS_FFMPEG.md` 构建；
+4. ~~鸿蒙：`cd ohos && ohpm install` 后按 `docs/OHOS_FFMPEG.md` 构建~~（v0.12.0 起不再支持该平台）；
    其余平台音视频由 FFmpegKitNext（`third_party/ffmpeg_kit_next`）自编原生库提供。
 5. 插件能力（OCR / ASR / TTS / WOFF2 / PDF 渲染 / rar·7z）在设置页
    「转换插件」导入对应 `.so/.dll/.dylib` 后即可离线使用。
@@ -102,7 +123,7 @@
   原生调用跑在 `Isolate.run`；未安装时返回 `PluginRequired` 而不是失败。
 - 设置页新增「转换插件」管理页（导入 / 重新导入 / 卸载）。
 
-### 3. 鸿蒙原生音视频后端
+### 3. 鸿蒙原生音视频后端（v0.12.0 已整段移除，仅作历史存档）
 
 - `lib/engine/ffmpeg_ohos_backend.dart`：MethodChannel `omniforge/ffmpeg`
   （execute / cancel / probeDuration + progress/log/complete 回推）。
@@ -166,7 +187,7 @@ dart run tool/check_crosstype.dart    # 15 项跨类型真实转换 + 插件诚�
    本地直接 `flutter build linux/windows` 前需先跑 `native/*.sh` +
    `copy_local_binaries.sh <platform>`。缺库时应用不会崩：`FfmpegBackendUnavailable`
    → 引擎返回 `PluginRequired('ffmpeg')`，其余引擎照常可用。
-4. **ohos** 仍走 `@ohos/ffmpeg-kit`，与 FFmpegKitNext 无关。
+4. ~~**ohos** 仍走 `@ohos/ffmpeg-kit`，与 FFmpegKitNext 无关。~~（v0.12.0 起移除鸿蒙平台）
 5. 已知限制：视频 → 字幕只抽内嵌轨（语音识别需 asr 插件）；PDF → 文本仅覆盖
    常见文本内容流；woff2 需插件；PES 不写缩略图段；复音音频转 MIDI 会退化。
 6. 插件二进制不随仓库分发：ABI 与导入方式见 `THIRD_PARTY_NOTICES.md` §1.2。
