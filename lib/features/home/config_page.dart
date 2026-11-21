@@ -1,21 +1,11 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../engine/conversion_planner.dart';
-import '../../engine/engine_providers.dart';
 import '../../models/format_node.dart';
 import '../../registry/registry_manager.dart';
 import '../../utils/file_type_detector.dart';
 import 'home_provider.dart';
 
-/// 转换配置页。
-///
-/// 保持 v0.6.0 的界面格式：文件卡片 + 四行选择项（输入类型 / 输入格式 /
-/// 输出类型 / 输出格式）+「高级选项」展开区。
-/// 区别只在于数据：输出类型与输出格式来自 BFS 规划器的真实可达链路，
-/// 高级选项按目标格式的 ParamDef 动态渲染。
 class ConfigPage extends ConsumerStatefulWidget {
   final String initialFilePath;
 
@@ -26,19 +16,16 @@ class ConfigPage extends ConsumerStatefulWidget {
 }
 
 class _ConfigPageState extends ConsumerState<ConfigPage> {
-  // 输入侧（自动识别后预填，可手动改，仅用于展示）
   FormatOption? _inputType;
   FormatOption? _inputFormat;
-
-  // 输出侧
   FormatOption? _outputType;
   FormatOption? _outputFormat;
-  FormatNode? _target;
-
-  // 源格式 id（规划器用）
-  String? _sourceId;
 
   bool _showAdvanced = false;
+  double _fps = 15;
+  bool _loop = true;
+
+  /// 非 GIF 目标的动态参数（按 ParamDef 渲染）
   final Map<String, dynamic> _params = {};
 
   @override
@@ -50,32 +37,15 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
   /// 自动识别输入类型和输入格式（文件头魔数 + 扩展名），进页面直接预填
   Future<void> _autoDetect() async {
     final detected = await FileTypeDetector.detect(widget.initialFilePath);
-    if (!mounted) return;
+    if (!detected.isKnown || !mounted) return;
 
     final catalog = ref.read(formatCatalogProvider);
-    final manager = RegistryManager();
 
-    // 源格式：先按扩展名 → 再按检测到的格式扩展名
-    FormatNode? source;
-    if (detected.formatExt.isNotEmpty) {
-      source = manager.getFormatByExtension(detected.formatExt);
-    }
-    if (source == null) {
-      final dot = widget.initialFilePath.lastIndexOf('.');
-      if (dot >= 0) {
-        source = manager.getFormatByExtension(
-          widget.initialFilePath.substring(dot + 1).toLowerCase(),
-        );
-      }
-    }
-
-    if (!detected.isKnown) {
-      setState(() => _sourceId = source?.id);
-      return;
-    }
-
+    // 类型：detected.typeKey 就是 formats.yaml 里的分类键
     final type = catalog.typeOf(detected.typeKey) ??
         FormatOption(label: detected.typeLabel, value: detected.typeKey);
+
+    // 格式：在该类型下按扩展名别名匹配（tif→tiff、jpeg→jpg 都能命中）
     final format = catalog.formatByExt(detected.typeKey, detected.formatExt) ??
         FormatOption(
           label: detected.formatLabel,
@@ -86,27 +56,13 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     setState(() {
       _inputType = type;
       _inputFormat = format;
-      _sourceId = source?.id;
     });
-  }
-
-  /// 当前源格式能到达的目标（含不可用的，用于展示插件提示）
-  List<ReachableTarget> _targets() {
-    final id = _sourceId;
-    if (id == null) return const <ReachableTarget>[];
-    return ref.watch(conversionPlannerProvider).reachableFrom(id);
-  }
-
-  ReachableTarget? _targetOf(String formatId) {
-    for (final t in _targets()) {
-      if (t.formatId == formatId) return t;
-    }
-    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final notifier = ref.read(homeProvider.notifier);
     final catalog = ref.watch(formatCatalogProvider);
 
     return Scaffold(
@@ -115,7 +71,20 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _outputFormat == null ? null : _start,
+            onPressed: () {
+              if (_outputFormat == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('请先选择输出类型和输出格式')),
+                );
+                return;
+              }
+              notifier.startConvert(
+                widget.initialFilePath,
+                outputFormat: _outputFormat!.value,
+                params: _collectParams(),
+              );
+              Navigator.pop(context);
+            },
             child: const Text('完毕', style: TextStyle(fontSize: 16)),
           ),
         ],
@@ -182,8 +151,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               onSelect: (o) => setState(() {
                 _outputType = o;
                 _outputFormat = null;
-                _target = null;
-                _params.clear();
               }),
             ),
           ),
@@ -193,33 +160,17 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
             enabled: _outputType != null,
             hint: _outputType == null ? '请先选择输出类型' : null,
             onTap: () {
-              if (_sourceId == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('无法识别该文件的格式，暂不支持转换')),
-                );
-                return;
-              }
-              final list = _outputOptions(_outputType!.value);
+              final list = catalog.formatsOf(_outputType!.value);
               _pick(
                 title: '选择输出格式',
                 options: list,
-                onSelect: (o) {
-                  final target = _targetOf(o.value) == null
-                      ? null
-                      : RegistryManager().getFormatById(o.value);
-                  if (target == null) {
-                    _snack('该目标格式需要安装插件后才能使用');
-                    return;
+                onSelect: (o) => setState(() {
+                  _outputFormat = o;
+                  _params.clear();
+                  for (final param in _targetParams()) {
+                    _params[param.key] = param.defaultValue;
                   }
-                  setState(() {
-                    _outputFormat = o;
-                    _target = target;
-                    _params.clear();
-                    for (final param in target.params) {
-                      _params[param.key] = param.defaultValue;
-                    }
-                  });
-                },
+                }),
               );
             },
           ),
@@ -235,8 +186,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
                   Icon(_showAdvanced ? Icons.expand_less : Icons.expand_more),
                   const SizedBox(width: 8),
                   const Text('高级选项',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ],
               ),
             ),
@@ -245,59 +195,6 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
           if (catalog.shellStage) _shellNotice(catalog),
         ],
       ),
-    );
-  }
-
-  /// 输出格式候选：只保留规划器判定可达的格式，按当前输出类型过滤。
-  /// 需要插件的目标仍然展示，并在副标题注明，选中时提示安装插件。
-  List<FormatOption> _outputOptions(String categoryKey) {
-    final manager = RegistryManager();
-    final result = <FormatOption>[];
-    for (final target in _targets()) {
-      final format = manager.getFormatById(target.formatId);
-      if (format == null) continue;
-      if (!format.categories.contains(categoryKey)) continue;
-
-      final routeNote = target.available
-          ? (target.isDirect ? '直接转换' : '${target.hops} 步转换')
-          : '需要插件 ${target.blockedPluginId ?? '未知'}';
-
-      result.add(FormatOption(
-        label: format.name,
-        value: format.id,
-        ext: format.extensions.isEmpty ? '' : format.extensions.first,
-        category: manager.getCategory(categoryKey)?.name,
-        note: routeNote,
-      ));
-    }
-    // 直接转换排前面，跳数少的优先
-    result.sort((a, b) {
-      final ta = _targetOf(a.value);
-      final tb = _targetOf(b.value);
-      final da = ta?.isDirect == true ? 0 : 1;
-      final db = tb?.isDirect == true ? 0 : 1;
-      if (da != db) return da - db;
-      final ha = ta?.hops ?? 9;
-      final hb = tb?.hops ?? 9;
-      if (ha != hb) return ha - hb;
-      return a.label.compareTo(b.label);
-    });
-    return result;
-  }
-
-  void _start() {
-    final notifier = ref.read(homeProvider.notifier);
-    notifier.startConvert(
-      widget.initialFilePath,
-      outputFormat: _target!.id,
-      params: Map<String, dynamic>.from(_params),
-    );
-    Navigator.pop(context);
-  }
-
-  void _snack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
     );
   }
 
@@ -322,42 +219,48 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     );
   }
 
-  // ── 高级选项：按目标格式的 ParamDef 动态渲染 ──
-
   Widget _advanced() {
-    final params = _target?.params ?? const <ParamDef>[];
+    final isGif = _outputFormat?.value == 'gif';
+    final params = isGif ? const <ParamDef>[] : _targetParams();
 
-    if (_target == null) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Text('选择输出格式后，这里会出现对应参数',
-            style: TextStyle(color: Colors.grey, fontSize: 13)),
-      );
-    }
-    if (params.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Text('该目标格式没有可调参数，直接点「完毕」即可',
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.outline, fontSize: 13)),
-      );
-    }
+    return Column(
+      children: [
+        if (isGif) _gifCard(),
+        if (!isGif && params.isNotEmpty) _paramCard(params),
+        if (!isGif && params.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text('选择输出格式后，这里会出现对应参数',
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
+          ),
+      ],
+    );
+  }
 
+  /// 当前目标格式在 YAML 里声明的参数
+  List<ParamDef> _targetParams() {
+    final id = _outputFormat?.value;
+    if (id == null) return const <ParamDef>[];
+    return RegistryManager().getFormatById(id)?.params ?? const <ParamDef>[];
+  }
+
+  /// 提交给引擎的参数：GIF 走原卡片里的 fps / loop，其余按 ParamDef
+  Map<String, dynamic> _collectParams() {
+    if (_outputFormat?.value == 'gif') {
+      return <String, dynamic>{'fps': _fps.toInt(), 'loop': _loop};
+    }
+    return Map<String, dynamic>.from(_params);
+  }
+
+  Widget _paramCard(List<ParamDef> params) {
     return Card(
-      elevation: 0,
-      color: Theme.of(context)
-          .colorScheme
-          .surfaceContainerHighest
-          .withValues(alpha: 0.35),
+      margin: const EdgeInsets.only(top: 8),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final param in params) ...[
-              _paramTile(param),
-              if (param != params.last) const SizedBox(height: 12),
-            ],
+            for (final param in params) _paramTile(param),
           ],
         ),
       ),
@@ -381,11 +284,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(param.label),
-                Text(
-                  current.toStringAsFixed(step < 1 ? 1 : 0),
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.primary),
-                ),
+                Text(current.toStringAsFixed(step < 1 ? 1 : 0)),
               ],
             ),
             Slider(
@@ -406,8 +305,8 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
         );
       case ParamType.dropdown:
         final options = param.options;
-        final current = value?.toString() ??
-            (options.isEmpty ? null : options.first);
+        final current =
+            value?.toString() ?? (options.isEmpty ? null : options.first);
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -435,7 +334,38 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
     }
   }
 
-  // ── 通用行 / 底部弹窗选择器（保持 v0.6.0 的交互） ──
+  Widget _gifCard() {
+    return Card(
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('GIF 设置', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [const Text('帧率 FPS'), Text('${_fps.toInt()}')],
+            ),
+            Slider(
+              value: _fps,
+              min: 1,
+              max: 60,
+              divisions: 59,
+              onChanged: (v) => setState(() => _fps = v),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('循环播放'),
+              value: _loop,
+              onChanged: (v) => setState(() => _loop = v),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _row({
     required String label,
@@ -506,8 +436,7 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
               ListTile(
                 title: Text(o.label),
                 subtitle: o.category != null
-                    ? Text(
-                        '${o.category}${o.note == null ? '' : ' · ${o.note}'}')
+                    ? Text('${o.category}${o.note == null ? '' : ' · ${o.note}'}')
                     : null,
                 onTap: () {
                   Navigator.pop(ctx);
