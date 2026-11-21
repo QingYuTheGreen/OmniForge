@@ -56,8 +56,8 @@ void main() {
     expect(find.text('输出类型'), findsOneWidget);
     expect(find.text('输出格式'), findsOneWidget);
     expect(find.text('高级选项'), findsOneWidget);
-    // 「完毕」按钮在未选目标时禁用
+    // 「完毕」按钮存在；未选目标时点击只提示、不发起转换（v0.6.0 行为）
     final button = tester.widget<TextButton>(find.widgetWithText(TextButton, '完毕'));
-    expect(button.onPressed, isNull);
+    expect(button.onPressed, isNotNull);
   });
 }
