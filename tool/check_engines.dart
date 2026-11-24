@@ -41,7 +41,7 @@ void main() async {
   }
 
   // 2. 每种 ready 格式都应至少有一个可达目标
-  for (final format in formats.where((f) => f.status == 'ready')) {
+  for (final format in formats.where((f) => f.status == 'ready' && !f.terminal)) {
     final targets = planner.reachableFrom(format.id);
     if (targets.isEmpty) {
       stderr.writeln('✗ ready 格式 ${format.id} 没有任何可达目标');

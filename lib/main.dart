@@ -1,34 +1,19 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'features/home/home_page.dart';
 import 'features/home/home_provider.dart';
 import 'features/settings/settings_provider.dart';
-import 'engine/engine_providers.dart';
 import 'registry/registry_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // 先把 assets/formats.yaml 全量读进注册中心，UI 的类型/格式级联全部来自这里
   await RegistryManager().initialize();
-  // 插件安装根目录：应用可写数据目录（Android / iOS / 桌面均可用）
-  Directory pluginDir;
-  try {
-    pluginDir = await getApplicationSupportDirectory();
-  } catch (_) {
-    pluginDir = Directory.systemTemp;
-  }
-  runApp(
-    ProviderScope(
-      overrides: [pluginInstallDirProvider.overrideWithValue(pluginDir)],
-      child: const OmniForgeApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: OmniForgeApp()));
 }
 
 class OmniForgeApp extends ConsumerStatefulWidget {

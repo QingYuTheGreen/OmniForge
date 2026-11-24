@@ -1,8 +1,39 @@
-# PATCH_MANIFEST — OmniForge 增量包（v0.12.0 · 移除鸿蒙平台 + UI 还原 v0.6.0）
+# PATCH_MANIFEST — OmniForge 增量包（v0.13.0 · 全部能力内置 + 转换图精修）
 
 > 给接手的 AI：这是**增量包**，按「怎么用」覆盖到对应基线即可，不要单独构建它。
 
-## 〇、v0.12.0 变更（2026-11-21）
+## 〇、v0.13.0 变更（2026-11-24）
+
+> 主题：**取消「外置安装插件」这条路，所有能力随安装包内置**；同时修正转换图的精度
+> （引擎能力表驱动的隐式边、终端产物不中转、最多 2 跳），并新增《格式转换矩阵》文档。
+
+1. 删除插件子系统：`lib/engine/plugin/`（manifest / catalog / registry）、
+   `lib/engine/engines/native_plugin_engine.dart`、`lib/features/settings/plugin_page.dart`、
+   设置页「转换插件」卡片、`tool/verify_plugin.dart`；`engine_providers.dart` 不再有
+   `pluginInstallDirProvider` / `nativePluginRegistryProvider`，`main.dart` 不再注入插件目录。
+2. `EngineRegistry.platformDefaults()` 只剩内置引擎（32 个纯 Dart + FFmpegKitNext 原生库），
+   不再接受 `plugins` 参数；`pluginInfoOf` 仅用于「开发环境缺原生音视频库」的诚实提示。
+3. 能力内置化处理：
+   - 音视频（mp3/wav/flac/aac/m4a/ogg/mp4/mkv/mov/avi/webm/flv）状态改为 `ready`，
+     由编译进包的 FFmpegKitNext 原生库驱动；
+   - WOFF2 / RAR / 7Z / MOBI / AZW3 / NCM / KGM / QMC 标记 `planned`（需要额外内置解码器或模型，
+     当前版本明确不支持；私有加密格式不做解密）；
+   - 删除依赖外部模型的 flows：`ncm_to_mp3`、`text_to_tts`、`image_to_ocr`、`audio_to_asr`、
+     `pdf_to_image`、`archive_extract`（显式链路从 49 条降为 43 条）。
+4. 转换图精修：
+   - 新增 `lib/engine/engine_capabilities.dart`：每个引擎声明「能读哪些格式 id → 能写哪些格式 id」，
+     规划器据此建隐式边（不再用 `accepts_from` 类别名猜测），并要求目标格式的 `engines` 包含该引擎；
+   - `FormatNode.terminal`：二维码 / 头像 / ASCII / 波形 / 频谱 / 哈希产物只能作为终点，不做中转；
+   - `ConversionPlanner.maxHops` 由 3 改为 **2**；
+   - `assets/formats.yaml` 的 `accepts_from` 全部重算为显式格式 id 列表。
+5. 新增 `docs/CONVERSION_MATRIX.md`（`tool/gen_conversion_matrix.dart` 生成）：
+   转换机制、19×19 类别可达数量、每个源格式的直转/多跳目标与引擎链、引擎清单与暂不支持清单。
+6. 自检脚本同步：`tool/check_engines.dart` 跳过终端格式、`tool/check_crosstype.dart` 去掉插件注入、
+   `tool/gen_conversion_matrix.dart` 文案更新为新机制；`woff2` / `rar` / `7z` 的失败改为
+   `EngineException`（明确「当前版本暂不支持」）而不是「需插件」。
+7. 文档：README / THIRD_PARTY_NOTICES 删除插件相关段落，声明「原生库编译进安装包、无外置安装路径」。
+
+## 〇.1、v0.12.0 变更（2026-11-21，历史记录）
 
 > 主题：**不再支持鸿蒙（OHOS）平台，相关代码与流水线全部移除**；音视频继续使用内置的
 > FFmpegKitNext 原生库（编译进应用，非插件、不调用命令行）。同时把转换配置页还原为 v0.6.0 的界面。

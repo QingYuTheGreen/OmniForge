@@ -9,7 +9,6 @@ import 'dart:typed_data';
 import 'package:omniforge/engine/conversion_planner.dart';
 import 'package:omniforge/engine/conversion_service.dart';
 import 'package:omniforge/engine/engine_registry.dart';
-import 'package:omniforge/engine/plugin/native_plugin_registry.dart';
 import 'package:omniforge/engine/i_engine.dart';
 import 'package:omniforge/models/format_node.dart';
 import 'package:yaml/yaml.dart';
@@ -53,7 +52,7 @@ Future<(bool, String)> _run(
   return (
     false,
     error?.message ??
-        (plugin != null ? '需要插件 ${plugin.pluginId}' : '未知失败'),
+        (plugin != null ? plugin.message : '未知失败'),
   );
 }
 
@@ -65,12 +64,7 @@ Future<void> main() async {
   final flows = (doc['flows'] as List)
       .map((f) => FlowRule.fromYaml(Map.from(f as Map)))
       .toList();
-  // 注入一个空的插件目录：插件引擎会注册但状态为「未安装」，
-  // 用于验证插件能力的链路可见性与诚实提示。
-  final pluginDir = await Directory.systemTemp.createTemp('omniforge_plugins_');
-  final registry = EngineRegistry.platformDefaults(
-    plugins: NativePluginRegistry(installDir: pluginDir),
-  );
+  final registry = EngineRegistry.platformDefaults();
   final planner = ConversionPlanner.fromData(
     formats: formats,
     flows: flows,
@@ -146,16 +140,14 @@ Future<void> main() async {
       planner.plan('ttf', 'woff')?.steps.map((s) => s.engineId).join(' → ') ?? 'null',
     );
 
-    // 插件能力必须诚实提示，不能假成功
-    final ttsPlan = planner.plan('txt', 'mp3');
+    // 未内置的能力不应假装可达（例如 TTS 需要模型，当前版本不提供）
     _check(
-      'txt → mp3 标记为需要插件',
-      ttsPlan != null && !ttsPlan.available,
-      ttsPlan?.blockedPluginId ?? 'null',
+      'txt → mp3 不再出现在可达目标中（未内置 TTS）',
+      planner.plan('txt', 'mp3') == null,
+      planner.plan('txt', 'mp3')?.describe ?? 'null',
     );
   } finally {
     await temp.delete(recursive: true);
-    await pluginDir.delete(recursive: true);
   }
 
   if (_failures > 0) {

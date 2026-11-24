@@ -12,7 +12,7 @@ import 'i_engine.dart';
 /// - 单步转换直接把引擎输出写到目标路径；
 /// - 多步转换在系统临时目录里生成中间文件，全部完成后清理；
 /// - 进度按步骤加权汇总成 0..1；
-/// - 需要插件时原样向上传递 [PluginRequired]。
+/// - 当前构建缺少内置原生库时原样向上传递 [PluginRequired]。
 class ConversionService {
   final EngineRegistry registry;
 

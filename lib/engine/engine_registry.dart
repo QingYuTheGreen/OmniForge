@@ -1,32 +1,30 @@
-
 import 'engines/archive_engine.dart';
 import 'engines/ascii_art_engine.dart';
 import 'engines/audio_midi_engine.dart';
 import 'engines/color_engine.dart';
 import 'engines/document_engine.dart';
 import 'engines/ebook_engine.dart';
+import 'engines/embroidery_engine.dart';
 import 'engines/ffmpeg_backend.dart';
 import 'engines/ffmpeg_engine.dart';
-import 'engines/embroidery_engine.dart';
 import 'engines/font_engine.dart';
 import 'engines/geo_render_engine.dart';
-import 'engines/identicon_engine.dart';
-import 'engines/image_palette_engine.dart';
-import 'engines/image_doc_engine.dart';
-import 'engines/mesh_geo_engine.dart';
-import 'engines/mesh_render_engine.dart';
-import 'engines/native_plugin_engine.dart';
-import 'engines/palette_image_engine.dart';
 import 'engines/gps_engine.dart';
 import 'engines/hash_engine.dart';
+import 'engines/identicon_engine.dart';
+import 'engines/image_doc_engine.dart';
 import 'engines/image_engine.dart';
+import 'engines/image_palette_engine.dart';
 import 'engines/mesh_engine.dart';
+import 'engines/mesh_geo_engine.dart';
+import 'engines/mesh_render_engine.dart';
 import 'engines/minecraft_engine.dart';
 import 'engines/model3d_engine.dart';
+import 'engines/palette_image_engine.dart';
 import 'engines/pdf_engine.dart';
 import 'engines/playlist_engine.dart';
-import 'engines/slides_engine.dart';
 import 'engines/qr_engine.dart';
+import 'engines/slides_engine.dart';
 import 'engines/spectrogram_engine.dart';
 import 'engines/spreadsheet_engine.dart';
 import 'engines/subtitle_engine.dart';
@@ -34,18 +32,15 @@ import 'engines/svg_vector_engine.dart';
 import 'engines/table_engine.dart';
 import 'engines/text_engine.dart';
 import 'engines/texture_engine.dart';
-import 'engine_utils.dart';
 import 'i_engine.dart';
-import 'plugin/native_plugin_registry.dart';
-import 'plugin/plugin_catalog.dart';
 
 /// 引擎可用状态：
-/// - [ready]：本机可直接转换
-/// - [pluginRequired]：引擎已实现，但需要安装额外插件/二进制
+/// - [ready]：当前构建可直接转换
+/// - [pluginRequired]：引擎已实现，但当前构建缺少所需的原生库
 /// - [missing]：该引擎尚未注册
 enum EngineReadiness { ready, pluginRequired, missing }
 
-/// 插件需求信息。
+/// 缺少内置原生库时的说明信息（普通安装包中不会出现）。
 class PluginInfo {
   final String id;
   final int sizeMb;
@@ -64,15 +59,10 @@ class EngineRegistry {
 
   /// 平台默认引擎集合。
   ///
-  /// [ffmpegBackend] 由应用层（lib/main.dart）注入原生库后端；
-  /// 不注入时音视频转换会提示缺少原生库，而不会退化为命令行调用。
-  ///
-  /// [plugins] 由应用层注入（安装目录来自 path_provider）；不注入时
-  /// 插件类引擎不会被注册，相关目标在规划阶段即显示为需要插件。
-  factory EngineRegistry.platformDefaults({
-    FfmpegBackend? ffmpegBackend,
-    NativePluginRegistry? plugins,
-  }) {
+  /// 所有转换能力都随安装包内置：纯 Dart 算法引擎 + 编译进包的 FFmpegKitNext
+  /// 原生库（Android / iOS / macOS / Windows / Linux）。不存在“外置安装插件”
+  /// 的路径；开发环境未注入原生库后端时，音视频引擎会明确提示缺少内置原生库。
+  factory EngineRegistry.platformDefaults({FfmpegBackend? ffmpegBackend}) {
     return EngineRegistry(<IEngine>[
       const HashEngine(),
       const SubtitleEngine(),
@@ -107,17 +97,6 @@ class EngineRegistry {
       const FontEngine(),
       AudioMidiEngine(backend: ffmpegBackend ?? const NullFfmpegBackend()),
       SpectrogramEngine(backend: ffmpegBackend ?? const NullFfmpegBackend()),
-      // ── 原生插件引擎：安装后可用，未安装时诚实提示 ──
-      if (plugins != null)
-        for (final manifest in PluginCatalog.builtIn)
-          NativePluginEngine(manifest: manifest, registry: plugins),
-      // ── 私有加密格式：不做破解，明确提示 ──
-      const PluginEngine('netease', pluginId: 'netease', sizeMb: 0,
-          note: 'NCM 为网易云私有加密格式，OmniForge 不提供解密'),
-      const PluginEngine('kugou', pluginId: 'kugou', sizeMb: 0,
-          note: 'KGM 为酷狗私有加密格式，OmniForge 不提供解密'),
-      const PluginEngine('qqmusic', pluginId: 'qqmusic', sizeMb: 0,
-          note: 'QMC 为 QQ 音乐私有加密格式，OmniForge 不提供解密'),
     ]);
   }
 
@@ -132,32 +111,21 @@ class EngineRegistry {
   EngineReadiness readiness(String id) {
     final engine = _engines[id];
     if (engine == null) return EngineReadiness.missing;
-    if (engine is PluginEngine) return EngineReadiness.pluginRequired;
     if (engine is FfmpegEngine && !engine.isAvailable) {
-      return EngineReadiness.pluginRequired;
-    }
-    if (engine is NativePluginEngine &&
-        engine.installState != PluginInstallState.installed) {
       return EngineReadiness.pluginRequired;
     }
     return EngineReadiness.ready;
   }
 
-  /// 该引擎需要的插件 id（无需插件时为 null）。
+  /// 该引擎缺失内置能力时的 id（可直接运行时为 null）。
   String? pluginIdOf(String id) => _engines[id]?.requiredPluginId;
 
-  /// 该引擎需要的插件详情（可直接运行 / 未注册时返回 null）。
+  /// 该引擎缺失能力的说明（可直接运行 / 未注册时返回 null）。
   PluginInfo? pluginInfoOf(String id) {
     final engine = _engines[id];
     if (engine == null) return null;
-    if (engine is PluginEngine && engine.sizeMb > 0) {
-      return PluginInfo(engine.pluginId, engine.sizeMb);
-    }
     if (engine is FfmpegEngine && !engine.isAvailable) {
-      return const PluginInfo('ffmpeg', 45);
-    }
-    if (engine is NativePluginEngine) {
-      return PluginInfo(engine.manifest.id, engine.manifest.sizeMb);
+      return const PluginInfo('ffmpeg', 0);
     }
     return null;
   }

@@ -9,7 +9,7 @@ import '../i_engine.dart';
 ///
 /// - `woff → ttf / otf`：解压每张表，按 sfnt 规范重建表目录与 4 字节对齐数据。
 /// - `ttf / otf → woff`：按表 zlib 压缩，生成 44 字节 WOFF 头 + 20 字节表目录。
-/// - `woff2` 需要 brotli 解码，属于可选插件能力，转换时返回 [PluginRequiredException]。
+/// - `woff2` 需要 brotli 解码，当前版本未内置该解码器，明确报错而不是静默失败。
 class FontEngine extends SimpleEngine {
   const FontEngine();
 
@@ -23,7 +23,7 @@ class FontEngine extends SimpleEngine {
     final source = _detectSource(bytes);
     switch (source) {
       case 'woff2':
-        throw const PluginRequiredException('font-woff2', 6);
+        throw const EngineException('WOFF2 需要 Brotli 解码器，当前版本暂不支持（可先转成 WOFF1 或 TTF）');
       case 'woff':
         if (target != 'ttf' && target != 'otf') {
           throw EngineException(

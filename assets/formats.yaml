@@ -3,7 +3,7 @@
 # stage: ready —— 转换引擎已接入。
 # status 说明：
 #   ready   —— 内置引擎可直接转换（纯 Dart，离线）
-#   plugin  —— 引擎已实现但需要外部插件 / 二进制（如 ffmpeg、LibreOffice）
+#   planned —— 需要额外的内置解码器/模型，当前版本暂不支持
 #   planned —— 暂未实现（会明确提示，不做假转换）
 # ═══════════════════════════════════════════════════════════
 stage: ready
@@ -93,42 +93,42 @@ formats:
     name: "JPG 图片"
     categories: ["image"]
     extensions: [".jpg", ".jpeg", ".jpe", ".jfif"]
-    accepts_from: ["image", "model3d", "mesh"]
+    accepts_from: ["bmp", "gif", "glb", "gltf", "ico", "obj", "off", "ply", "png", "stl", "tga", "tiff", "webp"]
     engines: ["image", "render3d"]
     status: ready
   - id: "png"
     name: "PNG 图片"
     categories: ["image"]
     extensions: [".png", ".apng"]
-    accepts_from: ["image", "gps", "embroidery"]
-    engines: ["image", "geo_render", "embroidery"]
+    accepts_from: ["aco", "ase", "bmp", "dst", "geojson", "gif", "gpl", "gpx", "ico", "jef", "jpg", "json", "kml", "pes", "tcx", "tga", "tiff", "webp"]
+    engines: ["image", "geo_render", "embroidery", "palette_image"]
     status: ready
   - id: "webp"
     name: "WebP 图片"
     categories: ["image"]
     extensions: [".webp"]
-    accepts_from: ["image"]
+    accepts_from: ["bmp", "gif", "ico", "jpg", "png", "tga", "tiff"]
     engines: ["image"]
     status: ready
   - id: "heic"
     name: "HEIC 图片"
     categories: ["image"]
     extensions: [".heic", ".heif"]
-    accepts_from: ["image"]
+    accepts_from: []
     engines: ["image"]
     status: planned
   - id: "svg"
     name: "SVG 矢量图"
     categories: ["image"]
     extensions: [".svg"]
-    accepts_from: ["image", "gps"]
+    accepts_from: ["bmp", "geojson", "gif", "gpx", "ico", "jpg", "kml", "png", "tcx", "tiff", "webp"]
     engines: ["svg_vector", "geo_render"]
     status: ready
   - id: "gif"
     name: "GIF 动图"
     categories: ["image"]
     extensions: [".gif"]
-    accepts_from: ["image"]
+    accepts_from: ["bmp", "ico", "jpg", "png", "tga", "tiff", "webp"]
     engines: ["image"]
     status: ready
     params:
@@ -147,35 +147,35 @@ formats:
     name: "BMP 位图"
     categories: ["image"]
     extensions: [".bmp", ".dib"]
-    accepts_from: ["image"]
+    accepts_from: ["gif", "ico", "jpg", "png", "tga", "tiff", "webp"]
     engines: ["image"]
     status: ready
   - id: "tiff"
     name: "TIFF 图像"
     categories: ["image"]
     extensions: [".tiff", ".tif"]
-    accepts_from: ["image"]
+    accepts_from: ["bmp", "gif", "ico", "jpg", "png", "tga", "webp"]
     engines: ["image"]
     status: ready
   - id: "ico"
     name: "ICO 图标"
     categories: ["image"]
     extensions: [".ico"]
-    accepts_from: ["image"]
+    accepts_from: ["bmp", "gif", "jpg", "png", "tga", "tiff", "webp"]
     engines: ["image"]
     status: ready
   - id: "hdr"
     name: "HDR 图像"
     categories: ["image"]
     extensions: [".hdr"]
-    accepts_from: ["image"]
+    accepts_from: []
     engines: ["image"]
     status: planned
   - id: "exr"
     name: "EXR 图像"
     categories: ["image"]
     extensions: [".exr"]
-    accepts_from: ["image"]
+    accepts_from: []
     engines: ["image"]
     status: planned
 
@@ -184,49 +184,49 @@ formats:
     name: "MP3 音频"
     categories: ["audio"]
     extensions: [".mp3"]
-    accepts_from: ["audio"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "wav"
     name: "WAV 音频"
     categories: ["audio"]
     extensions: [".wav", ".wave"]
-    accepts_from: ["audio"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "flac"
     name: "FLAC 无损"
     categories: ["audio"]
     extensions: [".flac"]
-    accepts_from: ["audio"]
+    accepts_from: ["aac", "avi", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "aac"
     name: "AAC 音频"
     categories: ["audio"]
     extensions: [".aac"]
-    accepts_from: ["audio"]
+    accepts_from: ["avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "m4a"
     name: "M4A 音频"
     categories: ["audio"]
     extensions: [".m4a"]
-    accepts_from: ["audio"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "ogg"
     name: "OGG 音频"
     categories: ["audio"]
     extensions: [".ogg", ".oga", ".opus"]
-    accepts_from: ["audio"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "midi"
     name: "MIDI 音序"
     categories: ["audio"]
     extensions: [".mid", ".midi"]
-    accepts_from: ["audio"]
+    accepts_from: ["aac", "flac", "m4a", "mp3", "ogg", "wav"]
     engines: ["audio_midi"]
     status: ready
     params:
@@ -238,100 +238,102 @@ formats:
     name: "NCM 网易云"
     categories: ["audio"]
     extensions: [".ncm"]
-    accepts_from: ["audio"]
-    engines: ["netease"]
-    status: plugin
-    note: "私有加密格式"
+    accepts_from: []
+    engines: []
+    status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
   - id: "kgm"
     name: "KGM 酷狗"
     categories: ["audio"]
     extensions: [".kgm", ".kgma"]
-    accepts_from: ["audio"]
-    engines: ["kugou"]
-    status: plugin
-    note: "私有加密格式"
+    accepts_from: []
+    engines: []
+    status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
   - id: "qmc"
     name: "QMC QQ音乐"
     categories: ["audio"]
     extensions: [".qmc", ".qmc0", ".qmc3", ".qmcflac", ".qmcogg"]
-    accepts_from: ["audio"]
-    engines: ["qqmusic"]
-    status: plugin
-    note: "私有加密格式"
+    accepts_from: []
+    engines: []
+    status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
 
   # ── 3. 视频 ──
   - id: "mp4"
     name: "MP4 视频"
     categories: ["video"]
     extensions: [".mp4", ".m4v"]
-    accepts_from: ["video", "image"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "mkv"
     name: "MKV 视频"
     categories: ["video"]
     extensions: [".mkv"]
-    accepts_from: ["video"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "mov"
     name: "MOV 视频"
     categories: ["video"]
     extensions: [".mov"]
-    accepts_from: ["video"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "avi"
     name: "AVI 视频"
     categories: ["video"]
     extensions: [".avi"]
-    accepts_from: ["video"]
+    accepts_from: ["aac", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "webm"
     name: "WebM 视频"
     categories: ["video"]
     extensions: [".webm"]
-    accepts_from: ["video"]
+    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
   - id: "flv"
     name: "FLV 视频"
     categories: ["video"]
     extensions: [".flv"]
-    accepts_from: ["video"]
+    accepts_from: ["aac", "avi", "flac", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
-    status: plugin
+    status: ready
 
   # ── 4. 电子书 ──
   - id: "epub"
     name: "EPUB 电子书"
     categories: ["ebook"]
     extensions: [".epub"]
-    accepts_from: ["ebook"]
+    accepts_from: []
     engines: ["ebook"]
     status: ready
   - id: "mobi"
     name: "MOBI 电子书"
     categories: ["ebook"]
     extensions: [".mobi", ".prc", ".azw"]
-    accepts_from: ["ebook"]
-    engines: ["ebook"]
+    accepts_from: []
+    engines: []
     status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
   - id: "azw3"
     name: "AZW3 电子书"
     categories: ["ebook"]
     extensions: [".azw3"]
-    accepts_from: ["ebook"]
-    engines: ["ebook"]
+    accepts_from: []
+    engines: []
     status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
 
   # ── 5. 文档 ──
   - id: "pdf"
     name: "PDF 文档"
     categories: ["document", "ebook", "slides"]
     extensions: [".pdf"]
-    accepts_from: ["image"]
+    accepts_from: ["bmp", "gif", "html", "ico", "jpg", "md", "png", "tiff", "txt", "webp"]
     engines: ["pdf"]
     status: ready
     note: "跨类共享：文档 / 电子书 / 幻灯片"
@@ -339,7 +341,7 @@ formats:
     name: "纯文本"
     categories: ["document", "ebook"]
     extensions: [".txt"]
-    accepts_from: ["document", "ebook"]
+    accepts_from: ["docx", "epub", "html", "md", "pdf", "rtf"]
     engines: ["text", "document", "ebook", "pdf"]
     status: ready
     note: "跨类共享：文档 / 电子书"
@@ -347,28 +349,28 @@ formats:
     name: "Word 文档"
     categories: ["document"]
     extensions: [".docx", ".doc"]
-    accepts_from: ["document", "image"]
+    accepts_from: ["bmp", "gif", "html", "ico", "jpg", "md", "png", "rtf", "tiff", "txt", "webp"]
     engines: ["document", "image_doc"]
     status: ready
   - id: "md"
     name: "Markdown"
     categories: ["document"]
     extensions: [".md", ".markdown"]
-    accepts_from: ["document"]
+    accepts_from: ["docx", "html", "rtf", "txt"]
     engines: ["text", "document"]
     status: ready
   - id: "html"
     name: "HTML 网页"
     categories: ["document"]
     extensions: [".html", ".htm"]
-    accepts_from: ["document"]
+    accepts_from: ["docx", "md", "rtf", "txt"]
     engines: ["text", "document"]
     status: ready
   - id: "rtf"
     name: "RTF 文档"
     categories: ["document"]
     extensions: [".rtf"]
-    accepts_from: ["document"]
+    accepts_from: ["docx", "html", "md", "txt"]
     engines: ["document"]
     status: ready
 
@@ -377,14 +379,14 @@ formats:
     name: "PowerPoint"
     categories: ["slides"]
     extensions: [".pptx", ".ppt"]
-    accepts_from: ["slides", "document"]
+    accepts_from: ["odp"]
     engines: ["slides"]
     status: ready
   - id: "odp"
     name: "ODP 演示"
     categories: ["slides"]
     extensions: [".odp"]
-    accepts_from: ["slides"]
+    accepts_from: ["pptx"]
     engines: ["slides"]
     status: ready
 
@@ -393,21 +395,21 @@ formats:
     name: "Excel 表格"
     categories: ["spreadsheet"]
     extensions: [".xlsx", ".xls"]
-    accepts_from: ["spreadsheet"]
+    accepts_from: ["csv", "json", "xml"]
     engines: ["spreadsheet", "table"]
     status: ready
   - id: "csv"
     name: "CSV 逗号分隔"
     categories: ["spreadsheet"]
     extensions: [".csv"]
-    accepts_from: ["spreadsheet"]
+    accepts_from: ["json", "xlsx", "xml"]
     engines: ["table"]
     status: ready
   - id: "json"
     name: "JSON 数据"
     categories: ["spreadsheet", "palette"]
     extensions: [".json"]
-    accepts_from: ["spreadsheet", "palette"]
+    accepts_from: ["aco", "ase", "csv", "gpl", "xlsx", "xml"]
     engines: ["table", "color"]
     status: ready
     note: "跨类共享：表格 / 调色板"
@@ -415,7 +417,7 @@ formats:
     name: "XML 数据"
     categories: ["spreadsheet"]
     extensions: [".xml"]
-    accepts_from: ["spreadsheet"]
+    accepts_from: ["csv", "json", "xlsx"]
     engines: ["table"]
     status: ready
 
@@ -424,28 +426,29 @@ formats:
     name: "TTF 字体"
     categories: ["font"]
     extensions: [".ttf"]
-    accepts_from: ["font"]
+    accepts_from: ["otf", "woff"]
     engines: ["font"]
     status: ready
   - id: "otf"
     name: "OTF 字体"
     categories: ["font"]
     extensions: [".otf"]
-    accepts_from: ["font"]
+    accepts_from: ["ttf", "woff"]
     engines: ["font"]
     status: ready
   - id: "woff2"
     name: "WOFF2 字体"
     categories: ["font"]
     extensions: [".woff2", ".woff"]
-    accepts_from: ["font"]
-    engines: ["font"]
-    status: plugin
+    accepts_from: []
+    engines: []
+    status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
   - id: "woff"
     name: "Web Open Font（WOFF 1.0）"
     categories: ["font"]
     extensions: [".woff"]
-    accepts_from: ["font"]
+    accepts_from: ["otf", "ttf"]
     engines: ["font"]
     status: ready
     note: "WOFF1：zlib 压缩 + 表 checksum 重算，ttf/otf 无损往返"
@@ -453,30 +456,31 @@ formats:
     name: "UFO 源文件"
     categories: ["font"]
     extensions: [".ufo"]
-    accepts_from: ["font"]
-    engines: ["font"]
-    status: plugin
+    accepts_from: []
+    engines: []
+    status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
 
   # ── 9. 调色板 ──
   - id: "ase"
     name: "ASE 色板"
     categories: ["palette"]
     extensions: [".ase"]
-    accepts_from: ["palette"]
+    accepts_from: ["aco", "bmp", "gif", "gpl", "ico", "jpg", "json", "png", "tiff", "webp"]
     engines: ["color", "image_palette"]
     status: ready
   - id: "aco"
     name: "ACO 色板"
     categories: ["palette"]
     extensions: [".aco"]
-    accepts_from: ["palette"]
+    accepts_from: ["ase", "bmp", "gif", "gpl", "ico", "jpg", "json", "png", "tiff", "webp"]
     engines: ["color", "image_palette"]
     status: ready
   - id: "gpl"
     name: "GPL 色板"
     categories: ["palette"]
     extensions: [".gpl"]
-    accepts_from: ["palette"]
+    accepts_from: ["aco", "ase", "bmp", "gif", "ico", "jpg", "json", "png", "tiff", "webp"]
     engines: ["color", "image_palette"]
     status: ready
 
@@ -485,42 +489,42 @@ formats:
     name: "OBJ 模型"
     categories: ["model3d"]
     extensions: [".obj"]
-    accepts_from: ["model3d"]
+    accepts_from: ["glb", "gltf", "off", "ply", "stl"]
     engines: ["model3d"]
     status: ready
   - id: "fbx"
     name: "FBX 模型"
     categories: ["model3d"]
     extensions: [".fbx"]
-    accepts_from: ["model3d"]
+    accepts_from: []
     engines: ["model3d"]
     status: planned
   - id: "stl"
     name: "STL 模型"
     categories: ["model3d"]
     extensions: [".stl"]
-    accepts_from: ["model3d"]
+    accepts_from: ["glb", "gltf", "obj", "off", "ply"]
     engines: ["model3d"]
     status: ready
   - id: "gltf"
     name: "glTF 模型"
     categories: ["model3d"]
     extensions: [".gltf"]
-    accepts_from: ["model3d"]
+    accepts_from: ["glb", "obj", "off", "ply", "stl"]
     engines: ["model3d"]
     status: ready
   - id: "glb"
     name: "GLB 模型"
     categories: ["model3d"]
     extensions: [".glb"]
-    accepts_from: ["model3d"]
+    accepts_from: ["gltf", "obj", "off", "ply", "stl"]
     engines: ["model3d"]
     status: ready
   - id: "geo_json"
     name: "MC 基岩模型"
     categories: ["model3d"]
     extensions: [".geo.json", ".geo_json"]
-    accepts_from: ["model3d", "mesh"]
+    accepts_from: ["glb", "gltf", "obj", "off", "ply", "stl"]
     engines: ["model3d", "mesh_geo"]
     status: ready
 
@@ -529,7 +533,7 @@ formats:
     name: "DDS 纹理"
     categories: ["texture"]
     extensions: [".dds"]
-    accepts_from: ["texture", "image"]
+    accepts_from: ["bmp", "gif", "ico", "jpg", "ktx", "png", "tga", "tiff", "webp"]
     engines: ["texture"]
     status: ready
     note: "与图像互转"
@@ -537,7 +541,7 @@ formats:
     name: "ASTC 纹理"
     categories: ["texture"]
     extensions: [".astc"]
-    accepts_from: ["texture", "image"]
+    accepts_from: []
     engines: ["texture"]
     status: planned
     note: "与图像互转"
@@ -545,7 +549,7 @@ formats:
     name: "KTX 纹理"
     categories: ["texture"]
     extensions: [".ktx", ".ktx2"]
-    accepts_from: ["texture", "image"]
+    accepts_from: ["bmp", "gif", "ico", "jpg", "png", "tiff", "webp"]
     engines: ["texture"]
     status: ready
     note: "与图像互转"
@@ -553,7 +557,7 @@ formats:
     name: "XNB 资源"
     categories: ["texture"]
     extensions: [".xnb"]
-    accepts_from: ["texture", "image"]
+    accepts_from: []
     engines: ["texture"]
     status: planned
     note: "与图像互转"
@@ -561,7 +565,7 @@ formats:
     name: "TGA 图像"
     categories: ["texture"]
     extensions: [".tga"]
-    accepts_from: ["texture", "image"]
+    accepts_from: ["bmp", "dds", "gif", "ico", "jpg", "ktx", "png", "tiff", "webp"]
     engines: ["texture"]
     status: ready
     note: "与图像互转"
@@ -571,14 +575,14 @@ formats:
     name: "PLY 点云网格"
     categories: ["mesh"]
     extensions: [".ply"]
-    accepts_from: ["mesh", "model3d"]
+    accepts_from: ["glb", "gltf", "obj", "off", "stl"]
     engines: ["mesh"]
     status: ready
   - id: "off"
     name: "OFF 网格"
     categories: ["mesh"]
     extensions: [".off"]
-    accepts_from: ["mesh", "model3d"]
+    accepts_from: ["glb", "gltf", "obj", "ply", "stl"]
     engines: ["mesh"]
     status: ready
 
@@ -590,6 +594,7 @@ formats:
     accepts_from: ["*"]
     engines: ["hash"]
     status: ready
+    terminal: true
     note: "接受任意文件输入"
   - id: "sha"
     name: "SHA 校验"
@@ -598,6 +603,7 @@ formats:
     accepts_from: ["*"]
     engines: ["hash"]
     status: ready
+    terminal: true
     note: "接受任意文件输入"
   - id: "crc"
     name: "CRC 校验"
@@ -606,6 +612,7 @@ formats:
     accepts_from: ["*"]
     engines: ["hash"]
     status: ready
+    terminal: true
     note: "接受任意文件输入"
   - id: "base64"
     name: "Base64 编码"
@@ -614,6 +621,7 @@ formats:
     accepts_from: ["*"]
     engines: ["hash"]
     status: ready
+    terminal: true
     note: "接受任意文件输入"
 
   # ── 14. 绣花 ──
@@ -621,21 +629,21 @@ formats:
     name: "PES 绣花"
     categories: ["embroidery"]
     extensions: [".pes"]
-    accepts_from: ["embroidery", "image"]
+    accepts_from: ["bmp", "dst", "gif", "ico", "jef", "jpg", "png", "tiff", "webp"]
     engines: ["embroidery"]
     status: ready
   - id: "dst"
     name: "DST 绣花"
     categories: ["embroidery"]
     extensions: [".dst"]
-    accepts_from: ["embroidery", "image"]
+    accepts_from: ["bmp", "gif", "ico", "jef", "jpg", "pes", "png", "tiff", "webp"]
     engines: ["embroidery"]
     status: ready
   - id: "jef"
     name: "JEF 绣花"
     categories: ["embroidery"]
     extensions: [".jef"]
-    accepts_from: ["embroidery", "image"]
+    accepts_from: ["bmp", "dst", "gif", "ico", "jpg", "pes", "png", "tiff", "webp"]
     engines: ["embroidery"]
     status: ready
 
@@ -644,28 +652,28 @@ formats:
     name: "GPX 轨迹"
     categories: ["gps"]
     extensions: [".gpx"]
-    accepts_from: ["gps"]
+    accepts_from: ["geojson", "kml", "tcx"]
     engines: ["gps"]
     status: ready
   - id: "kml"
     name: "KML 地标"
     categories: ["gps"]
     extensions: [".kml"]
-    accepts_from: ["gps"]
+    accepts_from: ["geojson", "gpx", "tcx"]
     engines: ["gps"]
     status: ready
   - id: "tcx"
     name: "TCX 训练"
     categories: ["gps"]
     extensions: [".tcx"]
-    accepts_from: ["gps"]
+    accepts_from: ["geojson", "gpx", "kml"]
     engines: ["gps"]
     status: ready
   - id: "geojson"
     name: "GeoJSON 地理"
     categories: ["gps"]
     extensions: [".geojson"]
-    accepts_from: ["gps"]
+    accepts_from: ["gpx", "kml", "tcx"]
     engines: ["gps"]
     status: ready
 
@@ -674,28 +682,28 @@ formats:
     name: "SRT 字幕"
     categories: ["subtitle"]
     extensions: [".srt"]
-    accepts_from: ["subtitle"]
+    accepts_from: ["ass", "lrc", "vtt"]
     engines: ["subtitle"]
     status: ready
   - id: "ass"
     name: "ASS 字幕"
     categories: ["subtitle"]
     extensions: [".ass", ".ssa"]
-    accepts_from: ["subtitle"]
+    accepts_from: ["lrc", "srt", "vtt"]
     engines: ["subtitle"]
     status: ready
   - id: "vtt"
     name: "WebVTT 字幕"
     categories: ["subtitle"]
     extensions: [".vtt"]
-    accepts_from: ["subtitle"]
+    accepts_from: ["ass", "lrc", "srt"]
     engines: ["subtitle"]
     status: ready
   - id: "lrc"
     name: "LRC 歌词"
     categories: ["subtitle"]
     extensions: [".lrc"]
-    accepts_from: ["subtitle"]
+    accepts_from: ["ass", "srt", "vtt"]
     engines: ["subtitle"]
     status: ready
 
@@ -704,21 +712,21 @@ formats:
     name: "M3U 列表"
     categories: ["playlist"]
     extensions: [".m3u"]
-    accepts_from: ["playlist"]
+    accepts_from: ["cue", "m3u8"]
     engines: ["playlist"]
     status: ready
   - id: "m3u8"
     name: "M3U8 列表"
     categories: ["playlist"]
     extensions: [".m3u8"]
-    accepts_from: ["playlist"]
+    accepts_from: ["cue", "m3u"]
     engines: ["playlist"]
     status: ready
   - id: "cue"
     name: "CUE 索引"
     categories: ["playlist"]
     extensions: [".cue"]
-    accepts_from: ["playlist"]
+    accepts_from: ["m3u", "m3u8"]
     engines: ["playlist"]
     status: ready
 
@@ -727,28 +735,30 @@ formats:
     name: "ZIP 压缩包"
     categories: ["archive"]
     extensions: [".zip"]
-    accepts_from: ["archive"]
+    accepts_from: ["tar_gz"]
     engines: ["archive"]
     status: ready
   - id: "rar"
     name: "RAR 压缩包"
     categories: ["archive"]
     extensions: [".rar"]
-    accepts_from: ["archive"]
-    engines: ["archive"]
-    status: plugin
+    accepts_from: []
+    engines: []
+    status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
   - id: "seven_z"
     name: "7Z 压缩包"
     categories: ["archive"]
     extensions: [".7z"]
-    accepts_from: ["archive"]
-    engines: ["archive"]
-    status: plugin
+    accepts_from: []
+    engines: []
+    status: planned
+    note: "需要内置额外解码器/模型，当前版本暂不支持"
   - id: "tar_gz"
     name: "TAR.GZ 压缩包"
     categories: ["archive"]
     extensions: [".tar.gz", ".tgz", ".tar"]
-    accepts_from: ["archive"]
+    accepts_from: ["zip"]
     engines: ["archive"]
     status: ready
 
@@ -757,7 +767,7 @@ formats:
     name: "基岩版世界"
     categories: ["minecraft"]
     extensions: [".mcworld"]
-    accepts_from: ["minecraft"]
+    accepts_from: ["mcpack", "mcpack_java", "mcworld_java", "zip"]
     engines: ["minecraft"]
     status: ready
     params:
@@ -773,14 +783,14 @@ formats:
     name: "基岩版资源包"
     categories: ["minecraft"]
     extensions: [".mcpack", ".mcaddon"]
-    accepts_from: ["minecraft"]
+    accepts_from: ["mcpack_java", "mcworld", "mcworld_java", "zip"]
     engines: ["minecraft"]
     status: ready
   - id: "mcworld_java"
     name: "Java 版存档"
     categories: ["minecraft"]
     extensions: [".mcworld", ".zip"]
-    accepts_from: ["minecraft", "archive"]
+    accepts_from: ["mcpack", "mcpack_java", "mcworld", "zip"]
     engines: ["minecraft"]
     status: ready
     note: "本质是 zip"
@@ -788,7 +798,7 @@ formats:
     name: "Java 版资源包"
     categories: ["minecraft"]
     extensions: [".mcpack", ".zip"]
-    accepts_from: ["minecraft", "archive"]
+    accepts_from: ["mcpack", "mcworld", "mcworld_java", "zip"]
     engines: ["minecraft"]
     status: ready
     note: "本质是 zip"
@@ -801,6 +811,7 @@ formats:
     accepts_from: ["*"]
     engines: ["qr"]
     status: ready
+    terminal: true
     params:
       - key: "size"
         type: "slider"
@@ -828,6 +839,7 @@ formats:
     accepts_from: ["*"]
     engines: ["identicon"]
     status: ready
+    terminal: true
     params:
       - key: "size"
         type: "slider"
@@ -851,9 +863,10 @@ formats:
     name: "ASCII 艺术 TXT"
     categories: ["image"]
     extensions: [".txt"]
-    accepts_from: ["image"]
+    accepts_from: ["bmp", "gif", "ico", "jpg", "png", "tiff", "webp"]
     engines: ["ascii_art"]
     status: ready
+    terminal: true
     params:
       - key: "width"
         type: "slider"
@@ -874,9 +887,10 @@ formats:
     name: "盲文艺术 TXT"
     categories: ["image"]
     extensions: [".txt"]
-    accepts_from: ["image"]
+    accepts_from: ["bmp", "gif", "ico", "jpg", "png", "tiff", "webp"]
     engines: ["ascii_art"]
     status: ready
+    terminal: true
     params:
       - key: "width"
         type: "slider"
@@ -896,9 +910,10 @@ formats:
     name: "音频波形 PNG"
     categories: ["image"]
     extensions: [".png"]
-    accepts_from: ["audio"]
+    accepts_from: []
     engines: ["ffmpeg"]
     status: ready
+    terminal: true
     params:
       - key: "width"
         type: "slider"
@@ -926,9 +941,10 @@ formats:
     name: "音频频谱 PNG"
     categories: ["image"]
     extensions: [".png"]
-    accepts_from: ["audio"]
+    accepts_from: []
     engines: ["spectrogram"]
     status: ready
+    terminal: true
     params:
       - key: "width"
         type: "slider"
@@ -999,10 +1015,6 @@ flows:
     source: ["png", "jpg", "bmp", "tga"]
     target: ["dds", "tga"]
     engine: "texture"
-  - name: "ncm_to_mp3"
-    source: ["ncm"]
-    target: ["mp3"]
-    engine: "netease"
   - name: "document_to_document"
     source: ["txt", "docx", "md", "html", "rtf"]
     target: ["txt", "docx", "md", "html", "rtf"]
@@ -1201,23 +1213,3 @@ flows:
     engine: "geo_render"
     params:
       - {key: "width", type: "slider", label: "宽度", default: "1200", min: 200, max: 4096, step: 20}
-  - name: "text_to_tts"
-    source: ["txt", "md", "html"]
-    target: ["mp3", "wav"]
-    engine: "tts"
-  - name: "image_to_ocr"
-    source: ["jpg", "png", "webp", "bmp", "tiff"]
-    target: ["txt"]
-    engine: "ocr"
-  - name: "audio_to_asr"
-    source: ["mp3", "wav", "flac", "aac", "m4a", "ogg", "mp4", "mkv"]
-    target: ["txt", "srt"]
-    engine: "asr"
-  - name: "pdf_to_image"
-    source: ["pdf"]
-    target: ["png", "jpg"]
-    engine: "pdf_render"
-  - name: "archive_extract"
-    source: ["rar", "seven_z"]
-    target: ["zip"]
-    engine: "archive_pro"

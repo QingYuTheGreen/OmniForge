@@ -16,6 +16,13 @@ class FormatNode {
   /// 备注（如「本质是 zip」「接受任意文件输入」）
   final String? note;
 
+  /// 终端格式：只能作为转换终点，不允许当作多跳链路的中间格式。
+  ///
+  /// 适用于「把任意文件编码成某产物」的格式（二维码 / 头像 / ASCII 画 /
+  /// 波形图 / 频谱图）以及哈希类产物——它们没有语义上的「再转换」能力，
+  /// 若参与中转会生成如 `pdf → qr_png → png` 这类无意义链路。
+  final bool terminal;
+
   FormatNode({
     required this.id,
     required this.name,
@@ -26,6 +33,7 @@ class FormatNode {
     this.params = const [],
     this.status = 'planned',
     this.note,
+    this.terminal = false,
   });
 
   /// 主分类（第一个），兼容旧调用
@@ -51,6 +59,7 @@ class FormatNode {
           .toList(),
       status: yaml['status']?.toString() ?? 'planned',
       note: yaml['note']?.toString(),
+      terminal: yaml['terminal'] == true,
     );
   }
 }

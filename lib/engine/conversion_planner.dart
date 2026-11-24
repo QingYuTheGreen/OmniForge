@@ -1,4 +1,5 @@
 import '../models/format_node.dart';
+import 'engine_capabilities.dart';
 
 /// 转换链路中的一个步骤。
 class ConversionStep {
@@ -112,7 +113,7 @@ class _Path {
   int get hops => edges.length;
 
   /// 排序权值：
-  /// 1. 先保证「无需插件」（缺引擎代价最大）；
+  /// 1. 先保证「引擎可用」（缺引擎代价最大）；
   /// 2. 再保证步数最少；
   /// 3. 同跳数下优先走显式 flows 宣告的链路（语义最准确），
   ///    避免把「pptx → txt」绕到「任意文件 → 二维码 PNG」这类万能边上。
@@ -129,7 +130,10 @@ class _Path {
 ///
 /// 边有两个来源：
 /// 1. `formats.yaml` 里显式声明的 `flows`（带参数，优先）；
-/// 2. 每个格式的 `accepts_from` + `engines`（隐式边，覆盖同引擎跨类转换）。
+/// 2. 引擎真实读写能力表 [engineCapabilities]（隐式边）。
+///
+/// 隐式边只按「引擎确实能读 X、也确实能写 Y」建立，不按类别名猜，
+/// 因此不会出现引擎无法执行的多跳链路。
 ///
 /// 纯 Dart 实现，不依赖 Flutter，方便单测。
 class ConversionPlanner {
@@ -139,7 +143,7 @@ class ConversionPlanner {
   /// 当前平台可直接运行的引擎 id。
   final Set<String> readyEngines;
 
-  /// 注册表中存在的全部引擎 id（含需要插件的）。
+  /// 注册表中存在的全部引擎 id。
   final Set<String> knownEngines;
 
   final Map<String, FormatNode> _formatById = {};
@@ -147,7 +151,7 @@ class ConversionPlanner {
   bool _built = false;
 
   /// 最大链路长度，避免离谱的多跳转换。
-  static const int maxHops = 3;
+  static const int maxHops = 2;
 
   ConversionPlanner({
     required this.formats,
@@ -189,6 +193,8 @@ class ConversionPlanner {
           if (source == target) continue;
           if (!_formatById.containsKey(source)) continue;
           if (!_formatById.containsKey(target)) continue;
+          // 终端格式（二维码 / 头像 / ASCII / 波形 / 频谱 / 哈希产物）只作为终点
+          if (_formatById[source]!.terminal) continue;
           _addEdge(_Edge(
             from: source,
             to: target,
@@ -200,47 +206,31 @@ class ConversionPlanner {
       }
     }
 
-    // ── 2. 隐式边：目标格式声明 accepts_from + engines ──
-    for (final target in formats) {
-      // 只有标为 ready 的目标才自动建边；plugin/planned 只通过显式 flows 暴露
-      if (target.status != 'ready') continue;
-      if (target.engines.isEmpty) continue;
-      final candidates = target.engines
-          .where(knownEngines.contains)
-          .toList(growable: false);
-      for (final source in _sourcesFor(target)) {
-        if (source.id == target.id) continue;
-        // 与源格式共享引擎的排在前面：docx→txt 优先复用 document 引擎，
-        // 而不是从零开始用 text 引擎硬读二进制文档。
-        final ordered = candidates.toList()
-          ..sort((a, b) {
-            final aShared = source.engines.contains(a) ? 0 : 1;
-            final bShared = source.engines.contains(b) ? 0 : 1;
-            if (aShared != bShared) return aShared - bShared;
-            return 0;
-          });
-        for (final engineId in ordered) {
-          _addEdge(_Edge(
-            from: source.id,
-            to: target.id,
-            engineId: engineId,
-            params: target.params,
-          ));
-        }
-      }
-    }
-  }
-
-  Iterable<FormatNode> _sourcesFor(FormatNode target) sync* {
-    if (target.acceptsFrom.isEmpty) return;
-    for (final token in target.acceptsFrom) {
-      if (token == '*') {
-        yield* formats;
-        continue;
-      }
-      for (final format in formats) {
-        if (format.id == token || format.categories.contains(token)) {
-          yield format;
+    // ── 2. 隐式边：由引擎真实读写能力表推导 ──
+    for (final capability in engineCapabilities) {
+      final engineId = capability.engineId;
+      if (!knownEngines.contains(engineId)) continue;
+      for (final sourceToken in capability.sources) {
+        final sources = sourceToken == '*'
+            ? formats
+            : formats.where((format) => format.id == sourceToken);
+        for (final source in sources) {
+          // 终端格式（二维码 / 头像 / ASCII / 波形 / 频谱 / 哈希产物）只作为终点
+          if (source.terminal) continue;
+          for (final targetId in capability.targets) {
+            if (targetId == source.id) continue;
+            final target = _formatById[targetId];
+            if (target == null) continue;
+            // 目标格式必须声明该引擎，避免出现「音频 → JPG」这类引擎虽能写
+            // 图片、但目标格式并未接入该引擎的边
+            if (!target.engines.contains(engineId)) continue;
+            _addEdge(_Edge(
+              from: source.id,
+              to: target.id,
+              engineId: engineId,
+              params: target.params,
+            ));
+          }
         }
       }
     }

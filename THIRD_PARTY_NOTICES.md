@@ -19,14 +19,6 @@ OmniForge 应用代码以 MIT 许可证发布。应用打包、链接或调用�
   - 分发时需附许可证文本与本声明，并提供获取对应 FFmpeg 源码的途径；
   - 不得移除库中的版权与许可证声明。
 
-### 1.1 原生转换插件（用户导入，不随应用分发）
-
-- 设置页「转换插件」允许用户导入 `.so` / `.dll` / `.dylib`，统一 ABI：
-  `int omniforge_convert(const char* input, const char* output,
-  const char* paramsJson, char* errbuf, int errlen)`。
-- 插件由用户/第三方提供，其许可证由各自作者决定；应用仅做加载与调用，
-  不在仓库或安装包内分发任何插件二进制。
-
 ## 2. Dart / Flutter 依赖（pub.dev）
 
 | 包 | 许可证 | 用途 |

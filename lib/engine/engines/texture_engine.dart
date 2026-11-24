@@ -8,7 +8,7 @@ import '../i_engine.dart';
 /// 纹理引擎：DDS / KTX / TGA → 通用图片，以及图片 → DDS / TGA。
 ///
 /// 支持 DDS 的 DXT1 / DXT3 / DXT5 / 未压缩 RGB(A)，
-/// KTX 的 DXT1 / DXT5 / 未压缩 RGBA8；其它压缩格式（ASTC / XNB）需要插件。
+/// KTX 的 DXT1 / DXT5 / 未压缩 RGBA8；其它压缩格式（ASTC / XNB）当前版本不支持。
 class TextureEngine extends SimpleEngine {
   const TextureEngine();
 

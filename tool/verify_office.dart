@@ -492,7 +492,7 @@ Future<void> _verifyFonts(Directory outputDir) async {
     sourceFormat: 'woff2',
   );
   expect(!woff2Result.ok, 'woff2 输入应被拒绝');
-  expect(woff2Result.pluginId == 'font-woff2', 'woff2 应返回插件 font-woff2');
+  expect(woff2Result.error != null, 'woff2 应明确报错（未内置 Brotli 解码器）');
 }
 
 /// 先查常见路径，再递归扫描候选目录。

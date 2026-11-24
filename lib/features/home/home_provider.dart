@@ -236,7 +236,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
                 final note = event.note;
                 return item.copyWith(
                   status: FileStatus.failed,
-                  error: '需要插件 ${event.pluginId}'
+                  error: event.note ??
+                      '当前构建缺少内置能力：${event.pluginId}（正式安装包内置，无需额外安装）'
                       '${event.sizeMb > 0 ? '（约 ${event.sizeMb} MB）' : ''}'
                       '${note != null ? '：$note' : ''}',
                 );
@@ -278,7 +279,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
     final blocked = targets.where((t) => !t.available).toList();
     if (blocked.isEmpty) return '暂不支持从 $sourceId 转换为其它格式';
     final plugin = blocked.first.blockedPluginId;
-    return '暂无可用的转换目标；部分目标需要插件 ${plugin ?? '未知'}';
+    return '暂无可用的转换目标；当前构建缺少内置能力 ${plugin ?? ''}'
+        '（正式安装包内置全部能力，开发/自检环境才会出现）';
   }
 
   void cancelConvert(int index) {

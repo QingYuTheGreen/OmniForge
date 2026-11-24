@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../registry/registry_manager.dart';
@@ -7,32 +5,15 @@ import 'conversion_planner.dart';
 import 'conversion_service.dart';
 import 'engine_registry.dart';
 import 'ffmpeg_kit_backend.dart';
-import 'plugin/native_plugin_registry.dart';
-
-/// 插件安装根目录（应用可写数据目录，由 main.dart 用 path_provider 注入）。
-///
-/// 未注入时退回系统临时目录，保证 provider 永远可用；此时插件状态为
-/// 「未安装」，不影响任何纯 Dart 引擎。
-final pluginInstallDirProvider = Provider<Directory>((ref) {
-  return Directory.systemTemp;
-});
-
-/// 原生插件注册表：管理插件清单、安装状态与动态库路径。
-final nativePluginRegistryProvider = Provider<NativePluginRegistry>((ref) {
-  return NativePluginRegistry(installDir: ref.watch(pluginInstallDirProvider));
-});
 
 /// 引擎注册表（应用层单例）。
 ///
-/// - 音视频引擎走平台原生库：由 FFmpegKitNext 编译出的原生 FFmpeg 库
-///   驱动（Android / iOS / macOS / Windows / Linux），全程不启动命令行进程；
-/// - 模型类能力（OCR / ASR / TTS / WOFF2 / PDF 渲染 / 扩展压缩包）
-///   由用户导入的原生插件提供，未安装时对应引擎返回 PluginRequired。
+/// 全部转换能力都随安装包内置：
+/// - 纯 Dart 算法引擎（图片 / 文档 / 表格 / 3D / GPS / 字幕 / 哈希 …）；
+/// - 音视频引擎：由 FFmpegKitNext 编译进包的原生 FFmpeg 库驱动
+///   （Android / iOS / macOS / Windows / Linux），全程不启动命令行进程。
 final engineRegistryProvider = Provider<EngineRegistry>((ref) {
-  return EngineRegistry.platformDefaults(
-    ffmpegBackend: FfmpegKitBackend(),
-    plugins: ref.watch(nativePluginRegistryProvider),
-  );
+  return EngineRegistry.platformDefaults(ffmpegBackend: FfmpegKitBackend());
 });
 
 /// 转换规划器：BFS 计算直转 / 多跳链路。

@@ -5,7 +5,7 @@ import 'package:path/path.dart' as p;
 import '../engine_utils.dart';
 import '../i_engine.dart';
 
-/// 压缩包引擎：zip / tar / tar.gz 互转；rar / 7z 需要插件。
+/// 压缩包引擎：zip / tar / tar.gz 互转；rar / 7z 需要额外解码器，当前版本暂不支持。
 class ArchiveEngine extends SimpleEngine {
   const ArchiveEngine();
 
@@ -18,7 +18,7 @@ class ArchiveEngine extends SimpleEngine {
   void validate(EngineContext context) {
     final source = _sourceKind(context.inputPath);
     if (source == 'rar' || source == 'seven_z' || source == '7z') {
-      throw PluginRequiredException(source, 12);
+      throw const EngineException('RAR / 7Z 解压需要额外解码器，当前版本暂不支持（可先用 ZIP / TAR.GZ）');
     }
   }
 
@@ -61,7 +61,7 @@ class ArchiveEngine extends SimpleEngine {
       case '7z':
       case 'seven_z':
       case 'rar':
-        throw PluginRequiredException(target, target == 'rar' ? 18 : 12);
+        throw const EngineException('RAR / 7Z 压缩需要额外编码器，当前版本暂不支持（可输出 ZIP / TAR.GZ）');
       default:
         return target;
     }
@@ -84,7 +84,7 @@ class ArchiveEngine extends SimpleEngine {
         return Archive()
           ..addFile(ArchiveFile(name, decompressed.length, decompressed));
       default:
-        throw PluginRequiredException(kind, 12);
+        throw const EngineException('RAR / 7Z 需要额外解码器，当前版本暂不支持');
     }
   }
 }

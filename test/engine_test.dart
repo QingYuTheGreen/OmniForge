@@ -290,10 +290,11 @@ void main() {
     expect(File(svg).readAsStringSync(), contains('<svg'));
   });
 
-  test('插件引擎：未安装时规划器标记 ffmpeg / 插件能力', () {
-    final targets = planner.reachableFrom('txt');
-    final tts = targets.where((t) => t.formatId == 'mp3').toList();
-    // 文本 → mp3 需要 TTS 插件，当前未安装 → 不可用
-    expect(tts.isEmpty || tts.every((t) => !t.available), isTrue);
+  test('全部能力内置：不再有外置插件入口，未内置的 TTS 不可达', () {
+    // txt → mp3 需要语音合成模型，当前版本未内置 → 规划器不给方案
+    expect(planner.plan('txt', 'mp3'), isNull);
+    // 终端产物不做中转：png → qr_png 后不应继续指向别的格式
+    final fromQr = planner.reachableFrom('qr_png');
+    expect(fromQr, isEmpty);
   });
 }

@@ -51,11 +51,18 @@ class Error extends EngineProgress {
   const Error(this.message);
 }
 
+/// 当前构建缺少某项内置原生能力（例如开发环境未注入音视频原生库）。
+///
+/// 正式安装包内置全部原生库，因此正常发布版本不会出现该状态；
+/// 保留它是为了在纯 Dart 自检环境里如实提示，而不是静默失败。
 class PluginRequired extends EngineProgress {
   final String pluginId;
   final int sizeMb;
   final String? note;
   const PluginRequired(this.pluginId, this.sizeMb, {this.note});
+
+  /// 面向用户的提示文案。
+  String get message => note ?? '当前构建缺少内置能力：$pluginId';
 }
 
 /// 统一引擎接口

@@ -6,7 +6,7 @@ import 'mesh_engine.dart';
 import 'mesh_io.dart';
 
 /// 3D 模型引擎：OBJ / STL / PLY / OFF / GLTF / GLB 互转。
-/// FBX 为专有二进制格式，需要插件。
+/// FBX 为专有二进制格式，当前版本不支持（未内置 FBX 解析器）。
 class Model3DEngine extends SimpleEngine {
   const Model3DEngine();
 

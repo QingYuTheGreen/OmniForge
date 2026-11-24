@@ -16,14 +16,14 @@ class EngineException implements Exception {
   String toString() => message;
 }
 
-/// 需要额外插件才能完成的转换。
+/// 当前构建缺少某项内置原生能力时的内部信号（安装包中不会出现）。
 class PluginRequiredException implements Exception {
   final String pluginId;
   final int sizeMb;
   const PluginRequiredException(this.pluginId, this.sizeMb);
 
   @override
-  String toString() => '需要插件 $pluginId';
+  String toString() => '当前构建缺少内置能力：$pluginId';
 }
 
 // ─────────────────────────── 参数读取 ───────────────────────────
@@ -156,27 +156,3 @@ abstract class SimpleEngine implements IEngine {
   }
 }
 
-/// 插件占位引擎：真实实现依赖外部插件/二进制，转换时给出明确提示。
-class PluginEngine implements IEngine {
-  @override
-  final String id;
-  final String pluginId;
-  final int sizeMb;
-  final String note;
-
-  const PluginEngine(
-    this.id, {
-    required this.pluginId,
-    this.sizeMb = 0,
-    this.note = '',
-  });
-
-  @override
-  String? get requiredPluginId => pluginId;
-
-  @override
-  Stream<EngineProgress> convert(EngineContext context) async* {
-    yield Progress(0.01, note.isEmpty ? '需要插件支持' : note);
-    yield PluginRequired(pluginId, sizeMb);
-  }
-}
