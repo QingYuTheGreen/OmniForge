@@ -127,6 +127,6 @@ const List<EngineCapability> engineCapabilities = <EngineCapability>[
   // ── 音视频（原生 FFmpegKitNext） ──
   EngineCapability('audio_midi', _audio, ['midi']),
   EngineCapability('spectrogram', _audio, ['png', 'jpg']),
-  EngineCapability('ffmpeg', [..._media, 'gif'], [..._media, 'gif']),
-  EngineCapability('ffmpeg', _media, ['srt', 'png', 'jpg']),
+  EngineCapability('ffmpeg', _media, _media),
+  EngineCapability('ffmpeg', _video, ['gif', 'srt', 'png', 'jpg']),
 ];

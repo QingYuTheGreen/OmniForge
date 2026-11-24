@@ -33,18 +33,22 @@ void main() {
     );
   });
 
-  test('格式表：19 类 / 95 种格式 / 全部有引擎归属', () {
+  test('格式表：19 类 / 95 种格式 / ready 与暂不支持的格式划分正确', () {
     final categories = <String>{};
     for (final format in formats) {
       categories.addAll(format.categories);
-      expect(format.engines, isNotEmpty, reason: '${format.id} 没有引擎');
+      // 所有能力内置：ready 格式必须有引擎；暂不支持（planned）允许为空
+      if (format.status == 'ready') {
+        expect(format.engines, isNotEmpty, reason: '${format.id} 没有引擎');
+      }
+      expect(format.status, anyOf('ready', 'planned'), reason: format.id);
     }
     expect(formats.length, 95);
     expect(categories.length, 19);
   });
 
-  test('每个 ready 格式都有可用的出站链路', () {
-    for (final format in formats.where((f) => f.status == 'ready')) {
+  test('每个 ready 且非终端的格式都有可用的出站链路', () {
+    for (final format in formats.where((f) => f.status == 'ready' && !f.terminal)) {
       final targets = planner.reachableFrom(format.id);
       expect(
         targets.where((t) => t.available),

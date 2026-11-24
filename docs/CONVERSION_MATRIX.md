@@ -30,7 +30,7 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
 
 | 源 \ 目标 | 图像 | 音频 | 视频 | 电子书 | 文档 | 幻灯片 | 表格 | 字体 | 调色板 | 3D 模型 | 纹理 | 网格 | 哈希计算 | 绣花 | GPS | 字幕 | 播放列表 | 压缩包 | 我的世界专区 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 图像 | 87 | 43 | 42 | 0 | 42 | 0 | 28 | 0 | 21 | 0 | 21 | 0 | 44 | 21 | 0 | 1 | 0 | 0 | 0 |
+| 图像 | 85 | 0 | 0 | 0 | 42 | 0 | 28 | 0 | 21 | 0 | 21 | 0 | 44 | 21 | 0 | 0 | 0 | 0 | 0 |
 | 音频 | 53 | 42 | 42 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 40 | 0 | 0 | 7 | 0 | 0 | 0 |
 | 视频 | 84 | 42 | 30 | 0 | 12 | 0 | 6 | 0 | 18 | 0 | 18 | 0 | 24 | 18 | 0 | 18 | 0 | 0 | 0 |
 | 电子书 | 6 | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 12 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -40,7 +40,7 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
 | 字体 | 10 | 0 | 0 | 0 | 0 | 0 | 0 | 20 | 0 | 0 | 0 | 0 | 20 | 0 | 0 | 0 | 0 | 0 | 0 |
 | 调色板 | 36 | 0 | 0 | 0 | 6 | 0 | 12 | 0 | 6 | 0 | 9 | 0 | 12 | 9 | 0 | 0 | 0 | 0 | 0 |
 | 3D 模型 | 52 | 0 | 0 | 0 | 8 | 0 | 4 | 0 | 12 | 16 | 12 | 8 | 24 | 12 | 0 | 0 | 0 | 0 | 0 |
-| 纹理 | 40 | 6 | 6 | 0 | 6 | 0 | 3 | 0 | 9 | 0 | 6 | 0 | 20 | 9 | 0 | 0 | 0 | 0 | 0 |
+| 纹理 | 40 | 0 | 0 | 0 | 6 | 0 | 3 | 0 | 9 | 0 | 6 | 0 | 20 | 9 | 0 | 0 | 0 | 0 | 0 |
 | 网格 | 24 | 0 | 0 | 0 | 4 | 0 | 2 | 0 | 6 | 10 | 6 | 2 | 8 | 6 | 0 | 0 | 0 | 0 | 0 |
 | 哈希计算 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | 绣花 | 36 | 0 | 0 | 0 | 6 | 0 | 3 | 0 | 9 | 0 | 9 | 0 | 12 | 6 | 0 | 0 | 0 | 0 | 0 |
@@ -50,7 +50,7 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
 | 压缩包 | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 16 | 0 | 0 | 0 | 0 | 2 | 8 |
 | 我的世界专区 | 8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 16 | 0 | 0 | 0 | 0 | 0 | 12 |
 
-可达 (源,目标) 组合总数（不含同格式自身）：**1785**
+可达 (源,目标) 组合总数（不含同格式自身）：**1685**
 
 ## 2. 每种格式能转成什么（含引擎链路）
 
@@ -95,18 +95,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `jpg` → `txt` ✅ jpg --[pdf]--> pdf --[pdf]--> txt
   - `jpg` → `xlsx` ✅ jpg --[image_palette]--> json --[spreadsheet]--> xlsx
   - `jpg` → `xml` ✅ jpg --[image_palette]--> json --[spreadsheet]--> xml
-  - `jpg` → `aac` ⏳ jpg --[image]--> gif --[ffmpeg]--> aac
-  - `jpg` → `avi` ⏳ jpg --[image]--> gif --[ffmpeg]--> avi
-  - `jpg` → `flac` ⏳ jpg --[image]--> gif --[ffmpeg]--> flac
-  - `jpg` → `flv` ⏳ jpg --[image]--> gif --[ffmpeg]--> flv
-  - `jpg` → `m4a` ⏳ jpg --[image]--> gif --[ffmpeg]--> m4a
-  - `jpg` → `mkv` ⏳ jpg --[image]--> gif --[ffmpeg]--> mkv
-  - `jpg` → `mov` ⏳ jpg --[image]--> gif --[ffmpeg]--> mov
-  - `jpg` → `mp3` ⏳ jpg --[image]--> gif --[ffmpeg]--> mp3
-  - `jpg` → `mp4` ⏳ jpg --[image]--> gif --[ffmpeg]--> mp4
-  - `jpg` → `ogg` ⏳ jpg --[image]--> gif --[ffmpeg]--> ogg
-  - `jpg` → `wav` ⏳ jpg --[image]--> gif --[ffmpeg]--> wav
-  - `jpg` → `webm` ⏳ jpg --[image]--> gif --[ffmpeg]--> webm
 
 #### `png`（.png） - ✅ 可读
 
@@ -146,18 +134,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `png` → `txt` ✅ png --[pdf]--> pdf --[pdf]--> txt
   - `png` → `xlsx` ✅ png --[image_palette]--> json --[spreadsheet]--> xlsx
   - `png` → `xml` ✅ png --[image_palette]--> json --[spreadsheet]--> xml
-  - `png` → `aac` ⏳ png --[image]--> gif --[ffmpeg]--> aac
-  - `png` → `avi` ⏳ png --[image]--> gif --[ffmpeg]--> avi
-  - `png` → `flac` ⏳ png --[image]--> gif --[ffmpeg]--> flac
-  - `png` → `flv` ⏳ png --[image]--> gif --[ffmpeg]--> flv
-  - `png` → `m4a` ⏳ png --[image]--> gif --[ffmpeg]--> m4a
-  - `png` → `mkv` ⏳ png --[image]--> gif --[ffmpeg]--> mkv
-  - `png` → `mov` ⏳ png --[image]--> gif --[ffmpeg]--> mov
-  - `png` → `mp3` ⏳ png --[image]--> gif --[ffmpeg]--> mp3
-  - `png` → `mp4` ⏳ png --[image]--> gif --[ffmpeg]--> mp4
-  - `png` → `ogg` ⏳ png --[image]--> gif --[ffmpeg]--> ogg
-  - `png` → `wav` ⏳ png --[image]--> gif --[ffmpeg]--> wav
-  - `png` → `webm` ⏳ png --[image]--> gif --[ffmpeg]--> webm
 
 #### `webp`（.webp） - ✅ 可读
 
@@ -197,18 +173,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `webp` → `txt` ✅ webp --[pdf]--> pdf --[pdf]--> txt
   - `webp` → `xlsx` ✅ webp --[image_palette]--> json --[spreadsheet]--> xlsx
   - `webp` → `xml` ✅ webp --[image_palette]--> json --[spreadsheet]--> xml
-  - `webp` → `aac` ⏳ webp --[image]--> gif --[ffmpeg]--> aac
-  - `webp` → `avi` ⏳ webp --[image]--> gif --[ffmpeg]--> avi
-  - `webp` → `flac` ⏳ webp --[image]--> gif --[ffmpeg]--> flac
-  - `webp` → `flv` ⏳ webp --[image]--> gif --[ffmpeg]--> flv
-  - `webp` → `m4a` ⏳ webp --[image]--> gif --[ffmpeg]--> m4a
-  - `webp` → `mkv` ⏳ webp --[image]--> gif --[ffmpeg]--> mkv
-  - `webp` → `mov` ⏳ webp --[image]--> gif --[ffmpeg]--> mov
-  - `webp` → `mp3` ⏳ webp --[image]--> gif --[ffmpeg]--> mp3
-  - `webp` → `mp4` ⏳ webp --[image]--> gif --[ffmpeg]--> mp4
-  - `webp` → `ogg` ⏳ webp --[image]--> gif --[ffmpeg]--> ogg
-  - `webp` → `wav` ⏳ webp --[image]--> gif --[ffmpeg]--> wav
-  - `webp` → `webm` ⏳ webp --[image]--> gif --[ffmpeg]--> webm
 
 #### `heic`（.heic） - ❌ 暂不支持
 
@@ -260,18 +224,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `gif` → `tga` ✅ `texture`
   - `gif` → `tiff` ✅ `image`
   - `gif` → `webp` ✅ `image`
-  - `gif` → `aac` ⏳ `ffmpeg`
-  - `gif` → `avi` ⏳ `ffmpeg`
-  - `gif` → `flac` ⏳ `ffmpeg`
-  - `gif` → `flv` ⏳ `ffmpeg`
-  - `gif` → `m4a` ⏳ `ffmpeg`
-  - `gif` → `mkv` ⏳ `ffmpeg`
-  - `gif` → `mov` ⏳ `ffmpeg`
-  - `gif` → `mp3` ⏳ `ffmpeg`
-  - `gif` → `mp4` ⏳ `ffmpeg`
-  - `gif` → `ogg` ⏳ `ffmpeg`
-  - `gif` → `wav` ⏳ `ffmpeg`
-  - `gif` → `webm` ⏳ `ffmpeg`
 - **多跳**（最多 2 跳）：
   - `gif` → `csv` ✅ gif --[image_palette]--> json --[spreadsheet]--> csv
   - `gif` → `html` ✅ gif --[image_doc]--> docx --[document]--> html
@@ -280,10 +232,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `gif` → `txt` ✅ gif --[image_doc]--> docx --[document]--> txt
   - `gif` → `xlsx` ✅ gif --[image_palette]--> json --[spreadsheet]--> xlsx
   - `gif` → `xml` ✅ gif --[image_palette]--> json --[spreadsheet]--> xml
-  - `gif` → `midi` ⏳ gif --[ffmpeg]--> mp3 --[audio_midi]--> midi
-  - `gif` → `spectrogram_png` ⏳ gif --[ffmpeg]--> mp3 --[spectrogram]--> spectrogram_png
-  - `gif` → `srt` ⏳ gif --[ffmpeg]--> mp4 --[ffmpeg]--> srt
-  - `gif` → `waveform_png` ⏳ gif --[ffmpeg]--> mp3 --[ffmpeg]--> waveform_png
 
 #### `bmp`（.bmp） - ✅ 可读
 
@@ -323,18 +271,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `bmp` → `txt` ✅ bmp --[pdf]--> pdf --[pdf]--> txt
   - `bmp` → `xlsx` ✅ bmp --[image_palette]--> json --[spreadsheet]--> xlsx
   - `bmp` → `xml` ✅ bmp --[image_palette]--> json --[spreadsheet]--> xml
-  - `bmp` → `aac` ⏳ bmp --[image]--> gif --[ffmpeg]--> aac
-  - `bmp` → `avi` ⏳ bmp --[image]--> gif --[ffmpeg]--> avi
-  - `bmp` → `flac` ⏳ bmp --[image]--> gif --[ffmpeg]--> flac
-  - `bmp` → `flv` ⏳ bmp --[image]--> gif --[ffmpeg]--> flv
-  - `bmp` → `m4a` ⏳ bmp --[image]--> gif --[ffmpeg]--> m4a
-  - `bmp` → `mkv` ⏳ bmp --[image]--> gif --[ffmpeg]--> mkv
-  - `bmp` → `mov` ⏳ bmp --[image]--> gif --[ffmpeg]--> mov
-  - `bmp` → `mp3` ⏳ bmp --[image]--> gif --[ffmpeg]--> mp3
-  - `bmp` → `mp4` ⏳ bmp --[image]--> gif --[ffmpeg]--> mp4
-  - `bmp` → `ogg` ⏳ bmp --[image]--> gif --[ffmpeg]--> ogg
-  - `bmp` → `wav` ⏳ bmp --[image]--> gif --[ffmpeg]--> wav
-  - `bmp` → `webm` ⏳ bmp --[image]--> gif --[ffmpeg]--> webm
 
 #### `tiff`（.tiff） - ✅ 可读
 
@@ -374,18 +310,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `tiff` → `txt` ✅ tiff --[pdf]--> pdf --[pdf]--> txt
   - `tiff` → `xlsx` ✅ tiff --[image_palette]--> json --[spreadsheet]--> xlsx
   - `tiff` → `xml` ✅ tiff --[image_palette]--> json --[spreadsheet]--> xml
-  - `tiff` → `aac` ⏳ tiff --[image]--> gif --[ffmpeg]--> aac
-  - `tiff` → `avi` ⏳ tiff --[image]--> gif --[ffmpeg]--> avi
-  - `tiff` → `flac` ⏳ tiff --[image]--> gif --[ffmpeg]--> flac
-  - `tiff` → `flv` ⏳ tiff --[image]--> gif --[ffmpeg]--> flv
-  - `tiff` → `m4a` ⏳ tiff --[image]--> gif --[ffmpeg]--> m4a
-  - `tiff` → `mkv` ⏳ tiff --[image]--> gif --[ffmpeg]--> mkv
-  - `tiff` → `mov` ⏳ tiff --[image]--> gif --[ffmpeg]--> mov
-  - `tiff` → `mp3` ⏳ tiff --[image]--> gif --[ffmpeg]--> mp3
-  - `tiff` → `mp4` ⏳ tiff --[image]--> gif --[ffmpeg]--> mp4
-  - `tiff` → `ogg` ⏳ tiff --[image]--> gif --[ffmpeg]--> ogg
-  - `tiff` → `wav` ⏳ tiff --[image]--> gif --[ffmpeg]--> wav
-  - `tiff` → `webm` ⏳ tiff --[image]--> gif --[ffmpeg]--> webm
 
 #### `ico`（.ico） - ✅ 可读
 
@@ -425,18 +349,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `ico` → `txt` ✅ ico --[image_doc]--> docx --[document]--> txt
   - `ico` → `xlsx` ✅ ico --[image_palette]--> json --[spreadsheet]--> xlsx
   - `ico` → `xml` ✅ ico --[image_palette]--> json --[spreadsheet]--> xml
-  - `ico` → `aac` ⏳ ico --[image]--> gif --[ffmpeg]--> aac
-  - `ico` → `avi` ⏳ ico --[image]--> gif --[ffmpeg]--> avi
-  - `ico` → `flac` ⏳ ico --[image]--> gif --[ffmpeg]--> flac
-  - `ico` → `flv` ⏳ ico --[image]--> gif --[ffmpeg]--> flv
-  - `ico` → `m4a` ⏳ ico --[image]--> gif --[ffmpeg]--> m4a
-  - `ico` → `mkv` ⏳ ico --[image]--> gif --[ffmpeg]--> mkv
-  - `ico` → `mov` ⏳ ico --[image]--> gif --[ffmpeg]--> mov
-  - `ico` → `mp3` ⏳ ico --[image]--> gif --[ffmpeg]--> mp3
-  - `ico` → `mp4` ⏳ ico --[image]--> gif --[ffmpeg]--> mp4
-  - `ico` → `ogg` ⏳ ico --[image]--> gif --[ffmpeg]--> ogg
-  - `ico` → `wav` ⏳ ico --[image]--> gif --[ffmpeg]--> wav
-  - `ico` → `webm` ⏳ ico --[image]--> gif --[ffmpeg]--> webm
 
 #### `hdr`（.hdr） - ❌ 暂不支持
 
@@ -1767,18 +1679,6 @@ App 不猜「格式对格式」的 if-else 大表，而是把每个引擎注册�
   - `tga` → `pdf` ✅ tga --[texture]--> png --[pdf]--> pdf
   - `tga` → `pes` ✅ tga --[texture]--> png --[embroidery]--> pes
   - `tga` → `svg` ✅ tga --[texture]--> png --[svg_vector]--> svg
-  - `tga` → `aac` ⏳ tga --[image]--> gif --[ffmpeg]--> aac
-  - `tga` → `avi` ⏳ tga --[image]--> gif --[ffmpeg]--> avi
-  - `tga` → `flac` ⏳ tga --[image]--> gif --[ffmpeg]--> flac
-  - `tga` → `flv` ⏳ tga --[image]--> gif --[ffmpeg]--> flv
-  - `tga` → `m4a` ⏳ tga --[image]--> gif --[ffmpeg]--> m4a
-  - `tga` → `mkv` ⏳ tga --[image]--> gif --[ffmpeg]--> mkv
-  - `tga` → `mov` ⏳ tga --[image]--> gif --[ffmpeg]--> mov
-  - `tga` → `mp3` ⏳ tga --[image]--> gif --[ffmpeg]--> mp3
-  - `tga` → `mp4` ⏳ tga --[image]--> gif --[ffmpeg]--> mp4
-  - `tga` → `ogg` ⏳ tga --[image]--> gif --[ffmpeg]--> ogg
-  - `tga` → `wav` ⏳ tga --[image]--> gif --[ffmpeg]--> wav
-  - `tga` → `webm` ⏳ tga --[image]--> gif --[ffmpeg]--> webm
 
 ### 网格（mesh）
 

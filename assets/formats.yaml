@@ -184,42 +184,42 @@ formats:
     name: "MP3 音频"
     categories: ["audio"]
     extensions: [".mp3"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flac", "flv", "m4a", "mkv", "mov", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "wav"
     name: "WAV 音频"
     categories: ["audio"]
     extensions: [".wav", ".wave"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "webm"]
+    accepts_from: ["aac", "avi", "flac", "flv", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "flac"
     name: "FLAC 无损"
     categories: ["audio"]
     extensions: [".flac"]
-    accepts_from: ["aac", "avi", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flv", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "aac"
     name: "AAC 音频"
     categories: ["audio"]
     extensions: [".aac"]
-    accepts_from: ["avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["avi", "flac", "flv", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "m4a"
     name: "M4A 音频"
     categories: ["audio"]
     extensions: [".m4a"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flac", "flv", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "ogg"
     name: "OGG 音频"
     categories: ["audio"]
     extensions: [".ogg", ".oga", ".opus"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flac", "flv", "m4a", "mkv", "mov", "mp3", "mp4", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "midi"
@@ -264,42 +264,42 @@ formats:
     name: "MP4 视频"
     categories: ["video"]
     extensions: [".mp4", ".m4v"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flac", "flv", "m4a", "mkv", "mov", "mp3", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "mkv"
     name: "MKV 视频"
     categories: ["video"]
     extensions: [".mkv"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flac", "flv", "m4a", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "mov"
     name: "MOV 视频"
     categories: ["video"]
     extensions: [".mov"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mp3", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flac", "flv", "m4a", "mkv", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "avi"
     name: "AVI 视频"
     categories: ["video"]
     extensions: [".avi"]
-    accepts_from: ["aac", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "flac", "flv", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
   - id: "webm"
     name: "WebM 视频"
     categories: ["video"]
     extensions: [".webm"]
-    accepts_from: ["aac", "avi", "flac", "flv", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav"]
+    accepts_from: ["aac", "avi", "flac", "flv", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav"]
     engines: ["ffmpeg"]
     status: ready
   - id: "flv"
     name: "FLV 视频"
     categories: ["video"]
     extensions: [".flv"]
-    accepts_from: ["aac", "avi", "flac", "gif", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
+    accepts_from: ["aac", "avi", "flac", "m4a", "mkv", "mov", "mp3", "mp4", "ogg", "wav", "webm"]
     engines: ["ffmpeg"]
     status: ready
 
